@@ -39,6 +39,39 @@
             </a>
         </div>
     </div>
+
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Dark Mode">
+        <span id="theme-icon">☾</span>
+    </button>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        
+        // Check for saved preference or system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+        
+        if (savedTheme === 'light' || (!savedTheme && systemPrefersLight)) {
+            document.body.classList.add('light-mode');
+            themeIcon.textContent = '☀';
+        } else {
+            document.body.classList.add('dark-mode');
+            themeIcon.textContent = '☾';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (document.body.classList.contains('light-mode')) {
+                document.body.classList.replace('light-mode', 'dark-mode');
+                localStorage.setItem('theme', 'dark');
+                themeIcon.textContent = '☾';
+            } else {
+                document.body.classList.replace('dark-mode', 'light-mode');
+                localStorage.setItem('theme', 'light');
+                themeIcon.textContent = '☀';
+            }
+        });
+    </script>
     
 </body>
 </html>
