@@ -15,9 +15,9 @@
 
     <div class="main-content">
         <div class="logo-container">
-            <video autoplay loop muted playsinline class="logo-animation">
-                <source src="media/val_logo_safari.mp4" type='video/mp4; codecs="hvc1"'>
-                <source src="media/val_logo_chrome.webm" type="video/webm">
+            <video autoplay loop muted playsinline class="logo-animation" id="logo-video">
+                <source id="video-source-safari" src="media/val_logo_safari_dark.mp4" type='video/mp4; codecs="hvc1"'>
+                <source id="video-source-chrome" src="media/val_logo_chrome_dark.webm" type="video/webm">
             </video>
         </div>
 
@@ -47,17 +47,35 @@
     <script>
         const themeToggle = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
+        const logoVideo = document.getElementById('logo-video');
+        const sourceSafari = document.getElementById('video-source-safari');
+        const sourceChrome = document.getElementById('video-source-chrome');
         
         // Check for saved preference or system preference
         const savedTheme = localStorage.getItem('theme');
         const systemPrefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
         
+        function setVideoSource(isLight) {
+            const safariSrc = isLight ? "media/val_logo_safari_light.mp4" : "media/val_logo_safari_dark.mp4";
+            const chromeSrc = isLight ? "media/val_logo_chrome_light.webm" : "media/val_logo_chrome_dark.webm";
+            
+            // Only reload if source changed
+            if (sourceSafari.getAttribute('src') !== safariSrc) {
+                sourceSafari.src = safariSrc;
+                sourceChrome.src = chromeSrc;
+                logoVideo.load();
+                logoVideo.play().catch(e => console.log("Autoplay prevented:", e));
+            }
+        }
+
         if (savedTheme === 'light' || (!savedTheme && systemPrefersLight)) {
             document.body.classList.add('light-mode');
             themeIcon.textContent = '☀';
+            setVideoSource(true);
         } else {
             document.body.classList.add('dark-mode');
             themeIcon.textContent = '☾';
+            setVideoSource(false);
         }
 
         themeToggle.addEventListener('click', () => {
@@ -65,10 +83,12 @@
                 document.body.classList.replace('light-mode', 'dark-mode');
                 localStorage.setItem('theme', 'dark');
                 themeIcon.textContent = '☾';
+                setVideoSource(false);
             } else {
                 document.body.classList.replace('dark-mode', 'light-mode');
                 localStorage.setItem('theme', 'light');
                 themeIcon.textContent = '☀';
+                setVideoSource(true);
             }
         });
     </script>
