@@ -92,6 +92,42 @@
             }
         });
     </script>
+
+    <script>
+        (function() {
+            const neuElements = [];
+
+            function initElements() {
+                document.querySelectorAll('.logo-animation, .title a, .squircle-link, .theme-toggle').forEach(el => {
+                    neuElements.push(el);
+                });
+            }
+
+            function updateShadows(mouseX, mouseY) {
+                for (const el of neuElements) {
+                    const rect = el.getBoundingClientRect();
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+                    const dx = mouseX - cx;
+                    const dy = mouseY - cy;
+                    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                    el.style.setProperty('--nx', (dx / dist).toFixed(4));
+                    el.style.setProperty('--ny', (dy / dist).toFixed(4));
+                }
+            }
+
+            let rafId = null;
+            document.addEventListener('pointermove', (e) => {
+                if (e.pointerType !== 'mouse') return;
+                if (!neuElements.length) initElements();
+                if (rafId) cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(() => {
+                    updateShadows(e.clientX, e.clientY);
+                    rafId = null;
+                });
+            });
+        })();
+    </script>
     
 </body>
 </html>

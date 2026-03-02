@@ -1,13 +1,15 @@
 :root {
+    --nx: -1;
+    --ny: -1;
     --bg-color: #1e1e1e;
     --text-main: #ffffff;
     --text-secondary: #e0e0e0;
     --text-hover: #a0a0a0;
     --accent: #e1b612;
-    --shadow-light: rgba(255, 255, 255, 0.05);
-    --shadow-dark: rgba(0, 0, 0, 0.5);
-    --shadow-light-hover: rgba(255, 255, 255, 0.08);
-    --shadow-dark-hover: rgba(0, 0, 0, 0.6);
+    --shadow-light: rgba(255, 255, 255, 0.08);
+    --shadow-dark: rgba(0, 0, 0, 0.65);
+    --shadow-light-hover: rgba(255, 255, 255, 0.12);
+    --shadow-dark-hover: rgba(0, 0, 0, 0.75);
 }
 
 @media (prefers-color-scheme: light) {
@@ -17,9 +19,9 @@
         --text-secondary: #404040;
         --text-hover: #606060;
         --shadow-light: rgba(255, 255, 255, 1.0);
-        --shadow-dark: rgba(0, 0, 0, 0.15);
-        --shadow-light-hover: rgba(255, 255, 255, 0.8);
-        --shadow-dark-hover: rgba(0, 0, 0, 0.25);
+        --shadow-dark: rgba(0, 0, 0, 0.25);
+        --shadow-light-hover: rgba(255, 255, 255, 1.0);
+        --shadow-dark-hover: rgba(0, 0, 0, 0.35);
     }
 }
 
@@ -29,9 +31,9 @@ body.light-mode {
     --text-secondary: #404040;
     --text-hover: #606060;
     --shadow-light: rgba(255, 255, 255, 1.0);
-    --shadow-dark: rgba(0, 0, 0, 0.15);
-    --shadow-light-hover: rgba(255, 255, 255, 0.8);
-    --shadow-dark-hover: rgba(0, 0, 0, 0.25);
+    --shadow-dark: rgba(0, 0, 0, 0.25);
+    --shadow-light-hover: rgba(255, 255, 255, 1.0);
+    --shadow-dark-hover: rgba(0, 0, 0, 0.35);
 }
 
 body.dark-mode {
@@ -39,10 +41,10 @@ body.dark-mode {
     --text-main: #ffffff;
     --text-secondary: #e0e0e0;
     --text-hover: #a0a0a0;
-    --shadow-light: rgba(255, 255, 255, 0.05);
-    --shadow-dark: rgba(0, 0, 0, 0.5);
-    --shadow-light-hover: rgba(255, 255, 255, 0.08);
-    --shadow-dark-hover: rgba(0, 0, 0, 0.6);
+    --shadow-light: rgba(255, 255, 255, 0.08);
+    --shadow-dark: rgba(0, 0, 0, 0.65);
+    --shadow-light-hover: rgba(255, 255, 255, 0.12);
+    --shadow-dark-hover: rgba(0, 0, 0, 0.75);
 }
 
 body {
@@ -71,9 +73,9 @@ body {
     border-radius: 30px;
     padding: 30px;
     background-color: var(--bg-color);
-    box-shadow: inset 4px 4px 10px var(--shadow-dark),
-                inset -4px -4px 10px var(--shadow-light);
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: inset calc(var(--nx) * -4px) calc(var(--ny) * -4px) 10px var(--shadow-dark),
+                inset calc(var(--nx) * 4px) calc(var(--ny) * 4px) 10px var(--shadow-light);
+    transition: background-color 0.3s ease, box-shadow 0.1s ease;
 }
 
 .title {
@@ -89,22 +91,22 @@ body {
     padding: 0.2rem 0.8rem;
     border-radius: 12px;
     background-color: var(--bg-color);
-    box-shadow: 0px 0px 5px var(--shadow-light),
-                3px 3px 5px var(--shadow-dark);
-    transition: all 0.2s ease;
+    box-shadow: calc(var(--nx) * 2px) calc(var(--ny) * 2px) 5px var(--shadow-light),
+                calc(var(--nx) * -3px) calc(var(--ny) * -3px) 5px var(--shadow-dark);
+    transition: transform 0.2s ease, color 0.2s ease, background-color 0.2s ease, box-shadow 0.1s ease;
 }
 
 .title a:hover {
     color: var(--accent);
     transform: translateY(-2px);
-    box-shadow: -3px -3px 8px var(--shadow-light-hover),
-                5px 5px 8px var(--shadow-dark-hover);
+    box-shadow: calc(var(--nx) * 3px) calc(var(--ny) * 3px) 8px var(--shadow-light-hover),
+                calc(var(--nx) * -5px) calc(var(--ny) * -5px) 8px var(--shadow-dark-hover);
 }
 
 .title a:active {
     transform: translateY(0);
-    box-shadow: inset -2px -2px 4px var(--shadow-light),
-                inset 2px 2px 4px var(--shadow-dark);
+    box-shadow: inset calc(var(--nx) * 2px) calc(var(--ny) * 2px) 4px var(--shadow-light),
+                inset calc(var(--nx) * -2px) calc(var(--ny) * -2px) 4px var(--shadow-dark);
 }
 
 .squircle-link {
@@ -119,9 +121,9 @@ body {
     color: var(--text-secondary);
     text-decoration: none;
     background-color: var(--bg-color);
-    box-shadow: 0px 0px 10px var(--shadow-light),
-                5px 5px 10px var(--shadow-dark);           
-    transition: all 0.2s ease;
+    box-shadow: calc(var(--nx) * 2px) calc(var(--ny) * 2px) 10px var(--shadow-light),
+                calc(var(--nx) * -5px) calc(var(--ny) * -5px) 10px var(--shadow-dark);           
+    transition: transform 0.2s ease, color 0.2s ease, background-color 0.2s ease, box-shadow 0.1s ease;
 }
 
 .link-preview {
@@ -134,15 +136,15 @@ body {
 
 .squircle-link:hover {
     transform: translateY(-2px);
-    box-shadow: -1px -1px 12px var(--shadow-light-hover),
-                6px 6px 18px var(--shadow-dark-hover);
+    box-shadow: calc(var(--nx) * 1px) calc(var(--ny) * 1px) 12px var(--shadow-light-hover),
+                calc(var(--nx) * -6px) calc(var(--ny) * -6px) 18px var(--shadow-dark-hover);
     color: var(--text-main);
 }
 
 .squircle-link:active {
     transform: translateY(0);
-    box-shadow: inset -4px -4px 8px var(--shadow-light),
-                inset 4px 4px 8px var(--shadow-dark);
+    box-shadow: inset calc(var(--nx) * 4px) calc(var(--ny) * 4px) 8px var(--shadow-light),
+                inset calc(var(--nx) * -4px) calc(var(--ny) * -4px) 8px var(--shadow-dark);
 }
 
 .links-container {
@@ -183,21 +185,21 @@ body {
     justify-content: center;
     align-items: center;
     font-size: 1.2rem;
-    box-shadow: 0px 0px 10px var(--shadow-light),
-                5px 5px 10px var(--shadow-dark);
-    transition: all 0.3s ease;
+    box-shadow: calc(var(--nx) * 2px) calc(var(--ny) * 2px) 10px var(--shadow-light),
+                calc(var(--nx) * -5px) calc(var(--ny) * -5px) 10px var(--shadow-dark);
+    transition: transform 0.3s ease, color 0.3s ease, background-color 0.3s ease, box-shadow 0.1s ease;
     z-index: 1000;
 }
 
 .theme-toggle:hover {
     color: var(--accent);
     transform: translateY(-2px);
-    box-shadow: -1px -1px 12px var(--shadow-light-hover),
-                6px 6px 18px var(--shadow-dark-hover);
+    box-shadow: calc(var(--nx) * 1px) calc(var(--ny) * 1px) 12px var(--shadow-light-hover),
+                calc(var(--nx) * -6px) calc(var(--ny) * -6px) 18px var(--shadow-dark-hover);
 }
 
 .theme-toggle:active {
     transform: translateY(0);
-    box-shadow: inset -4px -4px 8px var(--shadow-light),
-                inset 4px 4px 8px var(--shadow-dark);
+    box-shadow: inset calc(var(--nx) * 4px) calc(var(--ny) * 4px) 8px var(--shadow-light),
+                inset calc(var(--nx) * -4px) calc(var(--ny) * -4px) 8px var(--shadow-dark);
 }
