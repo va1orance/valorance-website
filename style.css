@@ -127,9 +127,9 @@ body {
 .link-preview {
     max-width: 100%;
     width: clamp(250px, 30vw, 350px);
-    height: auto;
+    aspect-ratio: 16 / 9;
     border-radius: 8px;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .squircle-link:hover {
