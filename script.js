@@ -8,13 +8,10 @@
     let userSelected = false;
     try { userSelected = ['light', 'dark'].includes(localStorage.getItem('theme')); } catch (_) {}
     let videoTheme;
-    let animationPaused = false;
-    const motionToggle = document.getElementById('motion-toggle');
     let frameRequest = 0;
 
     function updateVideo() {
-        motionToggle.hidden = reducedMotion.matches;
-        video.autoplay = !reducedMotion.matches && !animationPaused;
+        video.autoplay = !reducedMotion.matches;
         // A static supplied logo is preferable to downloading animation for reduced motion.
         if (reducedMotion.matches) {
             video.pause();
@@ -37,7 +34,7 @@
             video.append(source);
         }
         video.load();
-        if (!document.hidden && !animationPaused) video.play().catch(() => { /* Poster remains when autoplay is unavailable. */ });
+        if (!document.hidden) video.play().catch(() => { /* Poster remains when autoplay is unavailable. */ });
     }
 
     function applyTheme(theme) {
@@ -54,20 +51,12 @@
         try { localStorage.setItem('theme', theme); } catch (_) {}
         applyTheme(theme);
     });
-    motionToggle.addEventListener('click', () => {
-        animationPaused = !animationPaused;
-        video.autoplay = !animationPaused;
-        motionToggle.textContent = animationPaused ? 'Play' : 'Pause';
-        motionToggle.setAttribute('aria-label', `${animationPaused ? 'Play' : 'Pause'} logo animation`);
-        if (animationPaused) video.pause();
-        else video.play().catch(() => {});
-    });
     systemTheme.addEventListener('change', event => {
         if (!userSelected) applyTheme(event.matches ? 'light' : 'dark');
     });
     reducedMotion.addEventListener('change', updateVideo);
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden || reducedMotion.matches || animationPaused) video.pause();
+        if (document.hidden || reducedMotion.matches) video.pause();
         else video.play().catch(() => {});
     });
     // Retain the original pointer-lit feel, but only on the logo and only for mice.

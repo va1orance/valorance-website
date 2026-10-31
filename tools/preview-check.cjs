@@ -22,6 +22,14 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
       await page.reload();
       check(`home ${width}px ${theme}: no horizontal overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       check(`home ${width}px ${theme}: theme applied`, await page.locator('html').getAttribute('data-theme') === theme);
+      check(`home ${width}px ${theme}: borderless cards`, await page.locator('.project-card').evaluateAll(cards => cards.every(c => getComputedStyle(c).borderTopWidth === '0px')));
+      if (width <= 560) {
+        const copy = await page.locator('.intro-copy').boundingBox();
+        const logo = await page.locator('.logo-well').boundingBox();
+        const video = await page.locator('video').boundingBox();
+        check(`home ${width}px ${theme}: logo below intro`, logo.y >= copy.y + copy.height);
+        check(`home ${width}px ${theme}: logo scales within well`, logo.width >= 200 && video.width <= logo.width && Math.abs(video.width - video.height) < 1);
+      }
       const scan = await new AxeBuilder({page}).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
       result.accessibility.push({width, theme, violations: scan.violations.map(v => ({id: v.id, impact: v.impact, nodes: v.nodes.map(n => n.target)}))});
       check(`home ${width}px ${theme}: WCAG automated scan`, scan.violations.length === 0);
@@ -31,15 +39,11 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   await page.getByRole('button', {name:'Switch to dark theme'}).click();
   await page.reload();
   check('theme selection persists after reload', await page.locator('html').getAttribute('data-theme') === 'dark');
-  await page.getByRole('button', {name:'Pause logo animation'}).click();
-  check('animation pause control works', await page.locator('video').evaluate(v => v.paused));
-  await page.locator('#theme-toggle').click();
-  await page.waitForTimeout(400);
-  check('animation stays paused when theme changes', await page.locator('video').evaluate(v => v.paused));
-  await page.locator('#theme-toggle').click();
-  await page.getByRole('button', {name:'Play logo animation'}).click();
+  check('pause control removed', await page.locator('#motion-toggle').count() === 0);
+  check('VAL vector replaces wordmark', await page.locator('.wordmark svg').count() === 1);
+  check('decorative microcopy removed', await page.locator('.eyebrow, .logo-caption, .section-note, .preview-label, .prototype-label, .project-type, .footer-name').count() === 0);
   await page.waitForFunction(() => !document.querySelector('video').paused);
-  result.checks.push('animation resumes');
+  check('logo animation plays', await page.locator('video').evaluate(v => !v.paused));
   await page.keyboard.press('Control+Home');
   await page.reload();
   await page.keyboard.press('Tab');
@@ -75,7 +79,7 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   await rp.goto(base + '/');
   check('reduced motion: no video downloads', await rp.locator('video source').count() === 0);
   check('reduced motion: video paused', await rp.locator('video').evaluate(v => v.paused));
-  check('reduced motion: pause button hidden', !await rp.locator('#motion-toggle').isVisible());
+  check('reduced motion: pause button hidden', await rp.locator('#motion-toggle').count() === 0);
   const blocked = await browser.newContext({colorScheme:'dark'});
   await blocked.addInitScript(() => {
     Object.defineProperty(window, 'localStorage', {get() { throw new DOMException('Blocked', 'SecurityError'); }});
