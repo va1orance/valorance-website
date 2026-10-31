@@ -27,7 +27,8 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
       const well = await page.locator('.logo-well').boundingBox();
       const mark = await page.locator('video').boundingBox();
       check(`home ${width}px ${theme}: widescreen inlay`, Math.abs(well.width / well.height - 16 / 9) < .02);
-      check(`home ${width}px ${theme}: centered undistorted logo`, Math.abs(mark.width - mark.height) < 1 && Math.abs(mark.x + mark.width / 2 - well.x - well.width / 2) < 1 && mark.height <= well.height);
+      check(`home ${width}px ${theme}: compact original inlay`, well.width <= (width <= 560 ? 240 : width <= 760 ? 210 : 340) + 1);
+      check(`home ${width}px ${theme}: centered enlarged undistorted logo`, Math.abs(mark.width - mark.height) < 1 && Math.abs(mark.x + mark.width / 2 - well.x - well.width / 2) < 1 && Math.abs(mark.y + mark.height / 2 - well.y - well.height / 2) < 1 && mark.height >= well.height * 1.6);
       if (width <= 560) {
         const copy = await page.locator('.intro-copy').boundingBox();
         const logo = await page.locator('.logo-well').boundingBox();
