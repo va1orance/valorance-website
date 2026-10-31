@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Typetris Competitive</title>
+    <title>Typetris — Valorance</title>
+    <meta name="description" content="A Tetris-inspired typing game prototype. Type words, build combos, and send attacks.">
+    <link rel="icon" href="../val_backgroundless.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <a class="back-link" href="../">← All projects</a>
+    <main>
     <h1 id="main-title">Typetris</h1>
     <div id="how-to-play">
-        <button id="how-to-play-toggle">How to Play ▼</button>
+        <button id="how-to-play-toggle" type="button" aria-expanded="false" aria-controls="how-to-play-content">How to Play ▼</button>
         <div id="how-to-play-content" class="hidden">
             <ul>
                 <li>This is currently a proof of concept! Many more features to come...</li>
@@ -45,7 +49,7 @@
                 <span>Combo: <span id="player-combo">0</span></span>
                 <span>Grid Height: <span id="player-grid-height">4</span></span>
             </div>
-            <input type="text" id="player-input" placeholder="Type the target word here..." autofocus autocomplete="off" spellcheck="false">
+            <input type="text" id="player-input" aria-label="Type the highlighted target word" autocapitalize="none" autocorrect="off" placeholder="Type the target word here..." autofocus autocomplete="off" spellcheck="false">
             <button id="restart-btn" class="hidden">Retry</button>
         </div>
 
@@ -63,6 +67,7 @@
         </div>
     </div>
 
+    </main>
     <script src="script.js"></script>
 </body>
 </html>

@@ -1,0 +1,107 @@
+/* Run with NODE_PATH pointing to a Playwright + @axe-core/playwright install. */
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const artifacts = process.env.ARTIFACT_DIR || '/tmp/valorance-preview';
+fs.mkdirSync(artifacts, {recursive:true});
+const {chromium} = require('playwright');
+const {AxeBuilder} = require('@axe-core/playwright');
+const base = process.env.PREVIEW_URL || 'http://127.0.0.1:8787';
+const result = {checks: [], accessibility: [], errors: []};
+const check = (name, value) => { assert.ok(value, name); result.checks.push(name); };
+(async () => {
+  const browser = await chromium.launch({headless: true});
+  const context = await browser.newContext({colorScheme: 'dark'});
+  const page = await context.newPage();
+  page.on('pageerror', e => result.errors.push(e.message));
+  for (const width of [320, 390, 768, 1024, 1440]) {
+    await page.setViewportSize({width, height: 900});
+    for (const theme of ['dark', 'light']) {
+      await page.goto(base + '/');
+      await page.evaluate(t => localStorage.setItem('theme', t), theme);
+      await page.reload();
+      check(`home ${width}px ${theme}: no horizontal overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      check(`home ${width}px ${theme}: theme applied`, await page.locator('html').getAttribute('data-theme') === theme);
+      const scan = await new AxeBuilder({page}).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+      result.accessibility.push({width, theme, violations: scan.violations.map(v => ({id: v.id, impact: v.impact, nodes: v.nodes.map(n => n.target)}))});
+      check(`home ${width}px ${theme}: WCAG automated scan`, scan.violations.length === 0);
+    }
+  }
+  await page.goto(base + '/');
+  await page.getByRole('button', {name:'Switch to dark theme'}).click();
+  await page.reload();
+  check('theme selection persists after reload', await page.locator('html').getAttribute('data-theme') === 'dark');
+  await page.getByRole('button', {name:'Pause logo animation'}).click();
+  check('animation pause control works', await page.locator('video').evaluate(v => v.paused));
+  await page.locator('#theme-toggle').click();
+  await page.waitForTimeout(400);
+  check('animation stays paused when theme changes', await page.locator('video').evaluate(v => v.paused));
+  await page.locator('#theme-toggle').click();
+  await page.getByRole('button', {name:'Play logo animation'}).click();
+  await page.waitForFunction(() => !document.querySelector('video').paused);
+  result.checks.push('animation resumes');
+  await page.keyboard.press('Control+Home');
+  await page.reload();
+  await page.keyboard.press('Tab');
+  check('skip link is first keyboard target', await page.evaluate(() => document.activeElement.className === 'skip-link'));
+  await page.keyboard.press('Enter');
+  check('skip link focuses projects', await page.evaluate(() => document.activeElement.id === 'projects'));
+  await page.locator('.night-card').click();
+  check('Night card stays in preview', page.url() === base + '/night/');
+  await page.getByRole('link', {name:'All projects'}).click();
+  await page.locator('.typetris-card').click();
+  check('Typetris card stays in preview', page.url() === base + '/typetris/');
+  await page.getByRole('button', {name:'How to Play'}).click();
+  check('instructions report expanded state', await page.locator('#how-to-play-toggle').getAttribute('aria-expanded') === 'true');
+  const target = await page.locator('#player-word-grid .target-word').innerText();
+  await page.locator('#player-input').pressSequentially(target + ' ', {delay: 30});
+  check('typing target word increments combo', Number(await page.locator('#player-combo').innerText()) >= 1);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({width, height: 900});
+    check(`Typetris ${width}px: no horizontal overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  }
+  await page.locator('.back-link').click();
+  check('game return navigation', page.url() === base + '/');
+  for (const path of ['/night/terminology', '/night/design', '/night/statistics', '/original/', '/original/night/terminology']) {
+    const response = await context.request.get(base + path);
+    check(`route ${path}`, response.status() === 200);
+    check(`preview noindex header ${path}`, response.headers()['x-robots-tag'] === 'noindex, nofollow');
+  }
+  for (const path of ['/.git/config', '/tools/', '/original/.git/config']) {
+    check(`private path blocked ${path}`, (await context.request.get(base + path)).status() === 404);
+  }
+  const reduced = await browser.newContext({reducedMotion: 'reduce'});
+  const rp = await reduced.newPage();
+  await rp.goto(base + '/');
+  check('reduced motion: no video downloads', await rp.locator('video source').count() === 0);
+  check('reduced motion: video paused', await rp.locator('video').evaluate(v => v.paused));
+  check('reduced motion: pause button hidden', !await rp.locator('#motion-toggle').isVisible());
+  const blocked = await browser.newContext({colorScheme:'dark'});
+  await blocked.addInitScript(() => {
+    Object.defineProperty(window, 'localStorage', {get() { throw new DOMException('Blocked', 'SecurityError'); }});
+  });
+  const bp = await blocked.newPage();
+  await bp.goto(base + '/');
+  await bp.locator('#theme-toggle').click();
+  check('theme works with blocked localStorage', await bp.locator('html').getAttribute('data-theme') === 'light');
+  const nojs = await browser.newContext({javaScriptEnabled:false});
+  const np = await nojs.newPage();
+  await np.goto(base + '/');
+  check('projects usable without JS', await np.locator('.project-card').count() === 2);
+  await np.locator('.night-card').click();
+  check('Night navigates without JS', np.url() === base + '/night/');
+  check('no uncaught browser errors', result.errors.length === 0);
+  await page.goto(base + '/');
+  await page.setViewportSize({width:1440,height:1080});
+  await page.screenshot({path:path.join(artifacts, 'desktop.png'),fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:path.join(artifacts, 'mobile.png'),fullPage:true});
+  await page.locator('#theme-toggle').click();
+  await page.waitForTimeout(800);
+  await page.screenshot({path:path.join(artifacts, 'light.png'),fullPage:true});
+  await page.goto(base + '/typetris/');
+  await page.screenshot({path:path.join(artifacts, 'typetris-mobile.png'),fullPage:true});
+  await browser.close();
+  fs.writeFileSync(path.join(artifacts, 'results.json'), JSON.stringify(result,null,2));
+  console.log(JSON.stringify({passed:result.checks.length, accessibilityScans:result.accessibility.length, errors:result.errors}));
+})().catch(e => {fs.writeFileSync(path.join(artifacts, 'results.json'),JSON.stringify({...result,failure:e.stack},null,2)); console.error(e);process.exit(1);});

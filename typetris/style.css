@@ -257,3 +257,33 @@ body {
 #how-to-play-content li {
   margin-bottom: 8px;
 }
+
+/* Keep both boards usable on small screens without changing game mechanics. */
+* { box-sizing: border-box; }
+body { height: auto; min-height: 100svh; padding: 24px 28px 48px; }
+main { width: 100%; max-width: 1240px; }
+.back-link { display: inline-flex; align-items: center; align-self: flex-start; min-height: 44px; color: #cdd6f4; text-decoration: none; font-size: 14px; }
+.back-link:hover { color: #f9e2af; }
+a:focus-visible, button:focus-visible { outline: 2px solid #f9e2af; outline-offset: 5px; }
+#main-title { font-size: clamp(24px, 5.5vw, 64px); overflow-wrap: anywhere; }
+#multiplayer-container { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; width: 100%; }
+.game-instance { width: 100%; max-width: none; min-width: 0; }
+.word-grid { overflow: hidden; }
+.word-cell { min-width: 0; }
+.status-bar { gap: 8px; flex-wrap: wrap; font-size: 13px; }
+#how-to-play-toggle { min-height: 44px; }
+#how-to-play-content { margin-left: auto; margin-right: auto; line-height: 1.6; }
+#player-input { font-size: 16px; }
+#player-input::placeholder { color: #e0e2f0; opacity: 1; }
+@media (max-width: 700px) {
+    body { padding: 14px 24px 36px 16px; }
+    #multiplayer-container { grid-template-columns: 1fr; gap: 24px; }
+    .game-instance { padding: 14px; }
+    #danger-bar-container { width: 7px; margin-left: 3px; }
+    #combo-diff-indicator { right: 8px; top: 12px; font-size: 24px; }
+    .word-cell { font-size: clamp(10px, 2.8vw, 16px); padding: 0 .25em; }
+    .status-bar { font-size: 11px; padding: 8px; gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+}

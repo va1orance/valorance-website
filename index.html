@@ -1,133 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>valorance.net</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Valorance's corner of the internet. Explore Night, a thumb alpha keyboard layout, and Typetris, a typing game inspired by Tetris.">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#202020">
+    <title>Valorance — keyboards & experiments</title>
     <link rel="icon" href="val_backgroundless.ico" type="image/x-icon">
-    <link rel="canonical" href="https://valorance.net"/>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="canonical" href="https://valorance.net/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Valorance — keyboards & experiments">
+    <meta property="og:description" content="A thumb alpha keyboard layout. A typing game. A few things I've made.">
+    <meta property="og:url" content="https://valorance.net/">
+    <script src="theme-init.js"></script>
     <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
 <body>
+    <a class="skip-link" href="#projects">Skip to projects</a>
+    <div class="site-shell">
+        <header class="site-header">
+            <a class="wordmark" href="./" aria-label="Valorance home">valorance<span aria-hidden="true">.</span></a>
+            <nav aria-label="Main navigation">
+                <a href="#projects">Projects</a>
+                <a href="https://github.com/va1orance" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span><span class="sr-only"> (opens in new tab)</span></a>
+                <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light theme" hidden>
+                    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+                    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z"/></svg>
+                </button>
+            </nav>
+        </header>
 
-    <div class="main-content">
-        <div class="logo-container">
-            <video autoplay loop muted playsinline class="logo-animation" id="logo-video">
-                <source id="video-source-safari" src="media/val_logo_safari_dark.mp4" type='video/mp4; codecs="hvc1"'>
-                <source id="video-source-chrome" src="media/val_logo_chrome_dark.webm" type="video/webm">
-            </video>
-        </div>
+        <main>
+            <section class="intro" aria-labelledby="intro-title">
+                <div class="intro-copy">
+                    <p class="eyebrow">KEYBOARDS & EXPERIMENTS</p>
+                    <h1 id="intro-title">Hi, I'm <a href="https://www.youtube.com/@va1orance" target="_blank" rel="noopener noreferrer">Valorance<span class="sr-only"> (YouTube, opens in new tab)</span></a><span class="accent">.</span></h1>
+                    <p class="intro-description">A few things I've made.<br>Built around the way we type.</p>
+                    <a class="text-link" href="#projects">Explore the projects <span aria-hidden="true">↓</span></a>
+                </div>
+                <div class="logo-well">
+                    <video id="logo-video" autoplay loop muted playsinline preload="metadata" poster="night/images/val_backgroundless.png" tabindex="-1" aria-hidden="true"></video>
+                    <button id="motion-toggle" class="motion-toggle" type="button" aria-label="Pause logo animation" hidden>Pause</button>
+                    <span class="logo-caption">a little corner of the internet</span>
+                </div>
+            </section>
 
-        <h1 class="title">
-            Hi, I'm 
-            <a href="https://www.youtube.com/@va1orance" target="_blank" rel="noopener noreferrer" style="color: #e1b612;">Valorance</a>.        
-        </h1>
+            <section id="projects" class="projects" aria-labelledby="projects-title" tabindex="-1">
+                <div class="section-heading">
+                    <h2 id="projects-title">Selected projects</h2>
+                    <span class="section-note">Made to be tried.</span>
+                </div>
+                <div class="project-grid">
+                    <a class="project-card night-card" href="night/" aria-labelledby="night-title" aria-describedby="night-description night-action">
+                        <div class="project-preview night-preview">
+                            <span class="preview-label">THE LAYOUT</span>
+                            <img src="night/images/night.png" alt="" width="1205" height="489" decoding="async">
+                        </div>
+                        <div class="project-details">
+                            <div class="project-heading"><h3 id="night-title">Night</h3><span class="project-type">Keyboard layout</span></div>
+                            <p id="night-description">A thumb alpha layout. A different way to put your keyboard to work.</p>
+                            <span id="night-action" class="project-action">Explore the layout <span aria-hidden="true">↗</span></span>
+                        </div>
+                    </a>
+                    <a class="project-card typetris-card" href="typetris/" aria-labelledby="typetris-title" aria-describedby="typetris-description typetris-action">
+                        <div class="project-preview typetris-preview" aria-hidden="true">
+                            <span class="preview-label">THE GAME</span>
+                            <div class="game-art"><span class="game-word">type<span class="game-caret"></span></span><span class="game-word word-two">stack</span><span class="game-word word-three">repeat</span><div class="game-floor"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+                            <span class="prototype-label">PROOF OF CONCEPT</span>
+                        </div>
+                        <div class="project-details">
+                            <div class="project-heading"><h3 id="typetris-title">Typetris</h3><span class="project-type">Typing game</span></div>
+                            <p id="typetris-description">Typing meets Tetris. Build combos, send attacks, and keep your grid clear.</p>
+                            <span id="typetris-action" class="project-action">Play Typetris <span aria-hidden="true">↗</span></span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+        </main>
 
-        <div class="links-container">
-            <a href="https://valorance.net/night/" class="squircle-link">
-                <img src="night/images/night.png" alt="Night Preview" class="link-preview">
-                <div><span style="color: #e1b612; font-weight: 600;">Night</span> - A Thumb Alpha Keyboard Layout</div>
-            </a>
-
-            
-            <a href="https://valorance.net/typetris/" class="squircle-link">
-                <div class="link-preview" style="display: flex; justify-content: center; align-items: center; aspect-ratio: 16/9; background-color: transparent; color: #ffffff; font-family: 'Press Start 2P', cursive; font-size: 2.5rem; text-shadow: 4px 4px 0px #181825;">Typetris</div>
-                <div><span style="color: #e1b612; font-weight: 600;">Typetris</span> - A Tetris Inspired Typing Game</div>
-            </a>
-        </div>
+        <footer class="site-footer">
+            <span>Small projects. Plenty of keystrokes.</span>
+            <div><a href="https://www.youtube.com/@va1orance" target="_blank" rel="noopener noreferrer">YouTube <span aria-hidden="true">↗</span><span class="sr-only"> (opens in new tab)</span></a><span class="footer-name">valorance.net</span></div>
+        </footer>
     </div>
-
-    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Dark Mode">
-        <span id="theme-icon">☾</span>
-    </button>
-
-    <script>
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        const logoVideo = document.getElementById('logo-video');
-        const sourceSafari = document.getElementById('video-source-safari');
-        const sourceChrome = document.getElementById('video-source-chrome');
-        
-        // Check for saved preference or system preference
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-        
-        function setVideoSource(isLight) {
-            const safariSrc = isLight ? "media/val_logo_safari_light.mp4" : "media/val_logo_safari_dark.mp4";
-            const chromeSrc = isLight ? "media/val_logo_chrome_light.webm" : "media/val_logo_chrome_dark.webm";
-            
-            // Only reload if source changed
-            if (sourceSafari.getAttribute('src') !== safariSrc) {
-                sourceSafari.src = safariSrc;
-                sourceChrome.src = chromeSrc;
-                logoVideo.load();
-                logoVideo.play().catch(e => console.log("Autoplay prevented:", e));
-            }
-        }
-
-        if (savedTheme === 'light' || (!savedTheme && systemPrefersLight)) {
-            document.body.classList.add('light-mode');
-            themeIcon.textContent = '☀';
-            setVideoSource(true);
-        } else {
-            document.body.classList.add('dark-mode');
-            themeIcon.textContent = '☾';
-            setVideoSource(false);
-        }
-
-        themeToggle.addEventListener('click', () => {
-            if (document.body.classList.contains('light-mode')) {
-                document.body.classList.replace('light-mode', 'dark-mode');
-                localStorage.setItem('theme', 'dark');
-                themeIcon.textContent = '☾';
-                setVideoSource(false);
-            } else {
-                document.body.classList.replace('dark-mode', 'light-mode');
-                localStorage.setItem('theme', 'light');
-                themeIcon.textContent = '☀';
-                setVideoSource(true);
-            }
-        });
-    </script>
-
-    <script>
-        (function() {
-            const neuElements = [];
-
-            function initElements() {
-                document.querySelectorAll('.logo-animation, .title a, .squircle-link, .theme-toggle').forEach(el => {
-                    neuElements.push(el);
-                });
-            }
-
-            function updateShadows(mouseX, mouseY) {
-                for (const el of neuElements) {
-                    const rect = el.getBoundingClientRect();
-                    const cx = rect.left + rect.width / 2;
-                    const cy = rect.top + rect.height / 2;
-                    const dx = mouseX - cx;
-                    const dy = mouseY - cy;
-                    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                    el.style.setProperty('--nx', (dx / dist).toFixed(4));
-                    el.style.setProperty('--ny', (dy / dist).toFixed(4));
-                }
-            }
-
-            let rafId = null;
-            document.addEventListener('pointermove', (e) => {
-                if (e.pointerType !== 'mouse') return;
-                if (!neuElements.length) initElements();
-                if (rafId) cancelAnimationFrame(rafId);
-                rafId = requestAnimationFrame(() => {
-                    updateShadows(e.clientX, e.clientY);
-                    rafId = null;
-                });
-            });
-        })();
-    </script>
-    
 </body>
 </html>
