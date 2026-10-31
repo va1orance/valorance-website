@@ -63,8 +63,8 @@ h1 { font-size: clamp(36px, 4.2vw, 54px); line-height: 1.16; font-weight: 600; l
 h1 a { color: var(--accent); text-decoration: underline; text-decoration-color: var(--line); text-decoration-thickness: 1px; text-underline-offset: 8px; transition: color .18s; }
 h1 a:hover { color: var(--accent); }
 h1 .accent { color: #ffffff; }
-.logo-well { position: relative; width: 100%; max-width: 292px; justify-self: end; aspect-ratio: 1; display: grid; place-items: center; border-radius: 42px; background: var(--bg); box-shadow: inset 7px 7px 18px var(--shade), inset -7px -7px 18px var(--highlight); }
-.logo-well video { display: block; width: 72%; height: 72%; object-fit: contain; }
+.logo-well { position: relative; width: 100%; max-width: 340px; justify-self: end; aspect-ratio: 16 / 9; display: grid; place-items: center; border-radius: 34px; background: var(--bg); box-shadow: inset 7px 7px 18px var(--shade), inset -7px -7px 18px var(--highlight); transition: box-shadow .3s ease; }
+.logo-well video { position: absolute; display: block; width: auto; height: 88%; max-width: 90%; aspect-ratio: 1; object-fit: contain; }
 /* Remove the pale matte in the supplied light video without editing the asset. */
 [data-theme="light"] .logo-well video { mix-blend-mode: multiply; filter: contrast(1.6); }
 @media (prefers-reduced-motion: reduce) {
@@ -129,6 +129,29 @@ h3 { font-size: 25px; letter-spacing: -.7px; font-weight: 600; margin: 0; }
     .word-three { font-size: 17px; }
     .site-footer { align-items: flex-start; flex-direction: column; gap: 4px; margin-top: 40px; padding: 23px 0; }
     .site-footer > div { width: 100%; justify-content: space-between; }
+}
+@keyframes settle-in {
+    from { opacity: 0; translate: 0 14px; }
+    to { opacity: 1; translate: 0 0; }
+}
+@keyframes caret-blink {
+    0%, 45% { opacity: 1; }
+    50%, 95% { opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .intro-copy { animation: settle-in .65s cubic-bezier(.2,.7,.2,1) both; }
+    .logo-well { animation: settle-in .8s .08s cubic-bezier(.2,.7,.2,1) both; }
+    .project-card { animation: settle-in .65s .16s cubic-bezier(.2,.7,.2,1) backwards; }
+    .project-card:nth-child(2) { animation-delay: .24s; }
+    .game-word { transition: translate .35s cubic-bezier(.2,.7,.2,1); }
+    .typetris-card:is(:hover, :focus-visible) .game-word { translate: 0 -4px; }
+    .typetris-card:is(:hover, :focus-visible) .word-two { translate: 0 3px; }
+    .typetris-card:is(:hover, :focus-visible) .game-caret { animation: caret-blink 1s steps(1) 4; }
+    .night-preview img { transition: transform .45s cubic-bezier(.2,.7,.2,1); }
+    .night-card:is(:hover, :focus-visible) img { transform: translateY(-3px) scale(1.025); }
+    .theme-toggle { transition: transform .25s ease, color .18s, box-shadow .25s; }
+    .theme-toggle:hover { transform: rotate(12deg); }
+    .theme-toggle:active { transform: scale(.94); }
 }
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }

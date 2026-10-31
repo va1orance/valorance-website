@@ -17,12 +17,17 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   for (const width of [320, 390, 768, 1024, 1440]) {
     await page.setViewportSize({width, height: 900});
     for (const theme of ['dark', 'light']) {
-      await page.goto(base + '/');
+      await page.goto(base + '/', {waitUntil: 'domcontentloaded'});
       await page.evaluate(t => localStorage.setItem('theme', t), theme);
-      await page.reload();
+      await page.reload({waitUntil: 'domcontentloaded'});
+      await page.evaluate(() => Promise.all(document.getAnimations().map(a => a.finished.catch(() => {}))));
       check(`home ${width}px ${theme}: no horizontal overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       check(`home ${width}px ${theme}: theme applied`, await page.locator('html').getAttribute('data-theme') === theme);
       check(`home ${width}px ${theme}: borderless cards`, await page.locator('.project-card').evaluateAll(cards => cards.every(c => getComputedStyle(c).borderTopWidth === '0px')));
+      const well = await page.locator('.logo-well').boundingBox();
+      const mark = await page.locator('video').boundingBox();
+      check(`home ${width}px ${theme}: widescreen inlay`, Math.abs(well.width / well.height - 16 / 9) < .02);
+      check(`home ${width}px ${theme}: centered undistorted logo`, Math.abs(mark.width - mark.height) < 1 && Math.abs(mark.x + mark.width / 2 - well.x - well.width / 2) < 1 && mark.height <= well.height);
       if (width <= 560) {
         const copy = await page.locator('.intro-copy').boundingBox();
         const logo = await page.locator('.logo-well').boundingBox();
@@ -35,7 +40,7 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
       check(`home ${width}px ${theme}: WCAG automated scan`, scan.violations.length === 0);
     }
   }
-  await page.goto(base + '/');
+  await page.goto(base + '/', {waitUntil: 'domcontentloaded'});
   await page.getByRole('button', {name:'Switch to dark theme'}).click();
   await page.reload();
   check('theme selection persists after reload', await page.locator('html').getAttribute('data-theme') === 'dark');
@@ -79,26 +84,30 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   }
   const reduced = await browser.newContext({reducedMotion: 'reduce'});
   const rp = await reduced.newPage();
-  await rp.goto(base + '/');
+  await rp.goto(base + '/', {waitUntil: 'domcontentloaded'});
   check('reduced motion: no video downloads', await rp.locator('video source').count() === 0);
   check('reduced motion: video paused', await rp.locator('video').evaluate(v => v.paused));
+  check('reduced motion: entrance disabled', await rp.locator('.logo-well').evaluate(e => getComputedStyle(e).animationName === 'none'));
+  check('reduced motion: hover movement disabled', await rp.locator('.game-word').first().evaluate(e => getComputedStyle(e).transitionDuration === '0s'));
   check('reduced motion: pause button hidden', await rp.locator('#motion-toggle').count() === 0);
   const blocked = await browser.newContext({colorScheme:'dark'});
   await blocked.addInitScript(() => {
     Object.defineProperty(window, 'localStorage', {get() { throw new DOMException('Blocked', 'SecurityError'); }});
   });
   const bp = await blocked.newPage();
-  await bp.goto(base + '/');
+  await bp.goto(base + '/', {waitUntil: 'domcontentloaded'});
   await bp.locator('#theme-toggle').click();
   check('theme works with blocked localStorage', await bp.locator('html').getAttribute('data-theme') === 'light');
   const nojs = await browser.newContext({javaScriptEnabled:false});
   const np = await nojs.newPage();
-  await np.goto(base + '/');
+  await np.goto(base + '/', {waitUntil: 'domcontentloaded'});
   check('projects usable without JS', await np.locator('.project-card').count() === 2);
   await np.locator('.night-card').click();
   check('Night navigates without JS', np.url() === base + '/night/');
   check('no uncaught browser errors', result.errors.length === 0);
-  await page.goto(base + '/');
+  await page.goto(base + '/', {waitUntil: 'domcontentloaded'});
+  await page.evaluate(() => Promise.all(document.getAnimations().map(a => a.finished.catch(() => {}))));
+  await page.waitForFunction(() => document.querySelector('video').readyState >= 2);
   await page.setViewportSize({width:1440,height:1080});
   await page.screenshot({path:path.join(artifacts, 'desktop.png'),fullPage:true});
   await page.setViewportSize({width:390,height:844});
