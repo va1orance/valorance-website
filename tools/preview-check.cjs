@@ -39,6 +39,9 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   await page.getByRole('button', {name:'Switch to dark theme'}).click();
   await page.reload();
   check('theme selection persists after reload', await page.locator('html').getAttribute('data-theme') === 'dark');
+  check('selected projects heading removed', await page.getByText('Selected projects', {exact:true}).count() === 0);
+  check('Valorance is gold', await page.locator('h1 a').evaluate(e => getComputedStyle(e).color === 'rgb(225, 182, 18)'));
+  check('period is white', await page.locator('h1 .accent').evaluate(e => getComputedStyle(e).color === 'rgb(255, 255, 255)'));
   check('pause control removed', await page.locator('#motion-toggle').count() === 0);
   check('VAL vector replaces wordmark', await page.locator('.wordmark svg').count() === 1);
   check('decorative microcopy removed', await page.locator('.eyebrow, .logo-caption, .section-note, .preview-label, .prototype-label, .project-type, .footer-name').count() === 0);

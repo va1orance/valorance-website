@@ -60,8 +60,9 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .theme-toggle:hover { color: var(--accent); }
 .intro { display: grid; grid-template-columns: 1.45fr 1fr; align-items: center; gap: 60px; padding: 74px 0 78px; }
 h1 { font-size: clamp(36px, 4.2vw, 54px); line-height: 1.16; font-weight: 600; letter-spacing: -2.2px; margin: 0; }
-h1 a { text-decoration: underline; text-decoration-color: var(--line); text-decoration-thickness: 1px; text-underline-offset: 8px; transition: color .18s; }
+h1 a { color: var(--accent); text-decoration: underline; text-decoration-color: var(--line); text-decoration-thickness: 1px; text-underline-offset: 8px; transition: color .18s; }
 h1 a:hover { color: var(--accent); }
+h1 .accent { color: #ffffff; }
 .logo-well { position: relative; width: 100%; max-width: 292px; justify-self: end; aspect-ratio: 1; display: grid; place-items: center; border-radius: 42px; background: var(--bg); box-shadow: inset 7px 7px 18px var(--shade), inset -7px -7px 18px var(--highlight); }
 .logo-well video { display: block; width: 72%; height: 72%; object-fit: contain; }
 /* Remove the pale matte in the supplied light video without editing the asset. */
