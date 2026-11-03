@@ -43,7 +43,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .skip-link { position: fixed; top: 12px; left: 12px; transform: translateY(-180%); padding: 14px 20px; background: var(--ink); color: var(--bg); z-index: 10; }
 .skip-link:focus { transform: translateY(0); }
-.site-shell { max-width: 1168px; margin: auto; padding: 0 44px; }
+.site-shell { max-width: 1168px; margin: auto; padding: 0 44px; padding-bottom: 58px; }
 .site-header { display: flex; align-items: center; justify-content: space-between; min-height: 104px; border-bottom: 1px solid var(--line); }
 .wordmark { display: grid; place-items: center; width: 76px; min-height: 44px; color: var(--ink); }
 .wordmark svg { display: block; width: 72px; height: auto; }
@@ -171,6 +171,14 @@ article.project-card:hover, article.project-card:active { transform: none; box-s
     .word-three { font-size: 17px; }
     .site-footer { align-items: flex-start; flex-direction: column; gap: 4px; margin-top: 40px; padding: 23px 0; }
     .site-footer > div { width: 100%; justify-content: space-between; }
+}
+/* A soft moving light, with raised and inset shadows facing opposite ways. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    html[data-pointer-light] body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 3; background: radial-gradient(circle 420px at var(--light-x) var(--light-y), rgba(255, 243, 211, .045), transparent 100%); }
+    html[data-pointer-light] .project-card,
+    html[data-pointer-light] .theme-toggle { box-shadow: var(--light-dx) var(--light-dy) 18px var(--shade), var(--light-hx) var(--light-hy) 15px var(--highlight); }
+    html[data-pointer-light] .logo-well,
+    html[data-pointer-light] .theme-toggle:active { box-shadow: inset var(--light-hx) var(--light-hy) 18px var(--shade), inset var(--light-dx) var(--light-dy) 18px var(--highlight); }
 }
 @keyframes settle-in {
     from { opacity: 0; translate: 0 14px; }

@@ -59,22 +59,50 @@
         if (document.hidden || reducedMotion.matches) video.pause();
         else video.play().catch(() => {});
     });
-    // Retain the original pointer-lit feel, but only on the logo and only for mice.
-    const well = document.querySelector('.logo-well');
+    // One frame per pointer update; shadows are cast away from the light.
+    const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
+    const surfaces = [...document.querySelectorAll('.project-card, .logo-well, .theme-toggle')];
+    let pointer;
     const reset = () => {
         cancelAnimationFrame(frameRequest);
-        well.style.removeProperty('box-shadow');
+        frameRequest = 0;
+        pointer = undefined;
+        root.removeAttribute('data-pointer-light');
+        for (const surface of surfaces) {
+            for (const name of ['--light-dx', '--light-dy', '--light-hx', '--light-hy']) surface.style.removeProperty(name);
+        }
     };
-    well.addEventListener('pointermove', event => {
-        if (event.pointerType !== 'mouse' || reducedMotion.matches) return;
-        cancelAnimationFrame(frameRequest);
-        frameRequest = requestAnimationFrame(() => {
-            const box = well.getBoundingClientRect();
-            const x = (event.clientX - box.left) / box.width;
-            const y = (event.clientY - box.top) / box.height;
-            well.style.boxShadow = `inset ${(x - .5) * -14}px ${(y - .5) * -14}px 18px var(--shade), inset ${(x - .5) * 14}px ${(y - .5) * 14}px 18px var(--highlight)`;
-        });
-    });
-    well.addEventListener('pointerleave', reset);
+    function paintLight() {
+        frameRequest = 0;
+        if (!pointer) return;
+        root.dataset.pointerLight = '';
+        root.style.setProperty('--light-x', `${pointer.x}px`);
+        root.style.setProperty('--light-y', `${pointer.y}px`);
+        for (const surface of surfaces) {
+            const box = surface.getBoundingClientRect();
+            const dx = (box.left + box.width / 2 - pointer.x) / 36;
+            const dy = (box.top + box.height / 2 - pointer.y) / 36;
+            const distance = Math.hypot(dx, dy);
+            const scale = 10 / Math.max(10, distance);
+            surface.style.setProperty('--light-dx', `${(dx * scale).toFixed(2)}px`);
+            surface.style.setProperty('--light-dy', `${(dy * scale).toFixed(2)}px`);
+            surface.style.setProperty('--light-hx', `${(-dx * scale).toFixed(2)}px`);
+            surface.style.setProperty('--light-hy', `${(-dy * scale).toFixed(2)}px`);
+        }
+    }
+    function scheduleLight() {
+        if (pointer && !frameRequest) frameRequest = requestAnimationFrame(paintLight);
+    }
+    document.addEventListener('pointermove', event => {
+        if (event.pointerType !== 'mouse' || reducedMotion.matches || !finePointer.matches) return;
+        pointer = {x: event.clientX, y: event.clientY};
+        scheduleLight();
+    }, {passive: true});
+    document.documentElement.addEventListener('pointerleave', reset);
+    window.addEventListener('blur', reset);
+    window.addEventListener('scroll', scheduleLight, {passive: true});
+    window.addEventListener('resize', scheduleLight, {passive: true});
+    document.addEventListener('visibilitychange', () => { if (document.hidden) reset(); });
     reducedMotion.addEventListener('change', reset);
+    finePointer.addEventListener('change', reset);
 })();
