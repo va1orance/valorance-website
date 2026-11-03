@@ -13,6 +13,16 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   const browser = await chromium.launch({headless: true});
   const context = await browser.newContext({colorScheme: 'dark'});
   const page = await context.newPage();
+  // A Tailscale connection can briefly stall between repeated video loads.
+  const goto = page.goto.bind(page);
+  page.goto = async (...args) => {
+    try { return await goto(...args); }
+    catch (error) {
+      if (error.name !== 'TimeoutError') throw error;
+      await page.evaluate(() => window.stop()).catch(() => {});
+      return goto(...args);
+    }
+  };
   page.on('pageerror', e => result.errors.push(e.message));
   for (const width of [320, 390, 768, 1024, 1440]) {
     await page.setViewportSize({width, height: 900});
@@ -24,6 +34,9 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
       check(`home ${width}px ${theme}: no horizontal overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       check(`home ${width}px ${theme}: theme applied`, await page.locator('html').getAttribute('data-theme') === theme);
       check(`home ${width}px ${theme}: borderless cards`, await page.locator('.project-card').evaluateAll(cards => cards.every(c => getComputedStyle(c).borderTopWidth === '0px')));
+      check(`home ${width}px ${theme}: four projects in order`, JSON.stringify(await page.locator('.project-card h3').allTextContents()) === JSON.stringify(['Night', 'Typetris', 'TritonLog', 'Learneth']));
+      check(`home ${width}px ${theme}: unreleased cards have no dead links`, await page.locator('article.project-card').count() === 2 && await page.locator('article.project-card a').count() === 0);
+      check(`home ${width}px ${theme}: artwork fits previews`, await page.locator('.tritonlog-preview, .learneth-preview').evaluateAll(previews => previews.every(p => { const a = p.firstElementChild.getBoundingClientRect(), b = p.getBoundingClientRect(); return a.x >= b.x && a.y >= b.y && a.right <= b.right && a.bottom <= b.bottom; })));
       const well = await page.locator('.logo-well').boundingBox();
       const mark = await page.locator('video').boundingBox();
       check(`home ${width}px ${theme}: widescreen inlay`, Math.abs(well.width / well.height - 16 / 9) < .02);
@@ -102,7 +115,7 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   const nojs = await browser.newContext({javaScriptEnabled:false});
   const np = await nojs.newPage();
   await np.goto(base + '/', {waitUntil: 'domcontentloaded'});
-  check('projects usable without JS', await np.locator('.project-card').count() === 2);
+  check('projects usable without JS', await np.locator('.project-card').count() === 4);
   await np.locator('.night-card').click();
   check('Night navigates without JS', np.url() === base + '/night/');
   check('no uncaught browser errors', result.errors.length === 0);

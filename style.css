@@ -93,6 +93,41 @@ h3 { font-size: 25px; letter-spacing: -.7px; font-weight: 600; margin: 0; }
 .game-floor { display: flex; gap: 3px; position: absolute; right: -4%; left: -4%; bottom: -2px; height: 8px; }
 .game-floor i { flex: 1; border: 1px solid var(--line); border-radius: 1px; }
 .game-floor i:nth-child(3n) { background: var(--line); }
+/* Unreleased projects share the same surface without pretending to be links. */
+article.project-card:hover, article.project-card:active { transform: none; box-shadow: 7px 7px 18px var(--shade), -5px -5px 15px var(--highlight); }
+.meal-art, .lesson-art { zoom: .85; }
+.meal-art { position: relative; width: 170px; height: 140px; }
+.meal-plate { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: var(--surface); box-shadow: 5px 5px 12px var(--shade), -4px -4px 12px var(--highlight); }
+.meal-plate svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+.meal-track, .meal-progress { stroke-width: 5; }
+.meal-track { stroke: var(--line); }
+.meal-progress { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 248 340; }
+.meal-portions { position: absolute; inset: 43px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; transform: rotate(-12deg); }
+.meal-portions i { border-radius: 12px; background: var(--accent); opacity: .65; }
+.meal-portions i:first-child { grid-row: span 2; opacity: .9; }
+.meal-portions i:last-child { opacity: .35; }
+.meal-fork { position: absolute; right: 3px; top: 15px; width: 16px; height: 35px; display: flex; justify-content: space-between; border-radius: 0 0 9px 9px; box-shadow: 0 5px 0 var(--muted); }
+.meal-fork i { width: 3px; background: var(--muted); border-radius: 3px; }
+.meal-fork::after { content: ''; position: absolute; top: 36px; left: 6px; width: 4px; height: 72px; background: var(--muted); border-radius: 4px; }
+.lesson-art { position: relative; width: 170px; height: 145px; }
+.lesson-page { position: absolute; inset: 5px 16px 9px; padding: 23px 19px; border-radius: 12px; background: var(--surface); box-shadow: 5px 5px 12px var(--shade), -4px -4px 12px var(--highlight); transform: rotate(-6deg); z-index: 1; }
+.lesson-back { transform: translate(9px, 3px) rotate(7deg); z-index: 0; }
+.lesson-line { display: block; height: 4px; border-radius: 4px; margin-bottom: 10px; background: var(--muted); opacity: .35; }
+.lesson-title { width: 55%; height: 6px; opacity: .8; margin-bottom: 17px; }
+.lesson-highlight { background: var(--accent); opacity: 1; }
+.lesson-short { width: 70%; }
+.lesson-answer { display: flex; align-items: center; gap: 4px; padding: 7px 8px; border-radius: 5px; box-shadow: inset 2px 2px 4px var(--shade), inset -2px -2px 4px var(--highlight); }
+.lesson-answer span { width: 45%; height: 3px; background: var(--muted); opacity: .5; }
+.lesson-answer i { width: 2px; height: 11px; background: var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+    .project-card:nth-child(3) { animation-delay: .32s; }
+    .project-card:nth-child(4) { animation-delay: .4s; }
+    .meal-progress { transition: stroke-dasharray .7s ease; }
+    .tritonlog-card:hover .meal-progress { stroke-dasharray: 302 340; }
+    .lesson-art { transition: transform .4s ease; }
+    .learneth-card:hover .lesson-art { transform: translateY(-3px) rotate(3deg); }
+    .learneth-card:hover .lesson-answer i { animation: caret-blink 1s steps(1) 4; }
+}
 .site-footer { display: flex; justify-content: space-between; gap: 20px; align-items: center; border-top: 1px solid var(--line); padding: 25px 0; margin-top: 58px; font-size: 11px; color: var(--muted); }
 .site-footer > div { display: flex; align-items: center; gap: 30px; }
 .site-footer a { font-size: 11px; }
@@ -122,6 +157,7 @@ h3 { font-size: 25px; letter-spacing: -.7px; font-weight: 600; margin: 0; }
     .project-grid { grid-template-columns: 1fr; gap: 26px; }
     .project-heading { display: flex; }
     .project-details { padding: 22px 13px 12px; }
+    .meal-art, .lesson-art { zoom: .8; }
     .project-preview { aspect-ratio: 2; }
     .project-details p { max-width: none; }
     .game-word { font-size: 23px; }
