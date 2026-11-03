@@ -37,6 +37,8 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
       check(`home ${width}px ${theme}: four projects in order`, JSON.stringify(await page.locator('.project-card h3').allTextContents()) === JSON.stringify(['Night', 'Typetris', 'TritonLog', 'Learneth']));
       check(`home ${width}px ${theme}: unreleased cards have no dead links`, await page.locator('article.project-card').count() === 2 && await page.locator('article.project-card a').count() === 0);
       check(`home ${width}px ${theme}: artwork fits previews`, await page.locator('.tritonlog-preview, .learneth-preview').evaluateAll(previews => previews.every(p => { const a = p.firstElementChild.getBoundingClientRect(), b = p.getBoundingClientRect(); return a.x >= b.x && a.y >= b.y && a.right <= b.right && a.bottom <= b.bottom; })));
+      check(`home ${width}px ${theme}: gold project titles`, await page.locator('.project-heading h3').evaluateAll(es => es.every(e => getComputedStyle(e).color === getComputedStyle(document.querySelector('h1 a')).color)));
+      check(`home ${width}px ${theme}: borderless theme toggle`, await page.locator('#theme-toggle').evaluate(e => getComputedStyle(e).borderTopWidth === '0px' && getComputedStyle(e).boxShadow === 'none'));
       const well = await page.locator('.logo-well').boundingBox();
       const mark = await page.locator('video').boundingBox();
       check(`home ${width}px ${theme}: widescreen inlay`, Math.abs(well.width / well.height - 16 / 9) < .02);
@@ -62,7 +64,7 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   check('Valorance is gold', await page.locator('h1 a').evaluate(e => getComputedStyle(e).color === 'rgb(225, 182, 18)'));
   check('period is white', await page.locator('h1 .accent').evaluate(e => getComputedStyle(e).color === 'rgb(255, 255, 255)'));
   check('pause control removed', await page.locator('#motion-toggle').count() === 0);
-  check('VAL vector replaces wordmark', await page.locator('.wordmark svg').count() === 1);
+  check('header removed entirely', await page.locator('header, .site-header, .wordmark').count() === 0);
   check('decorative microcopy removed', await page.locator('.eyebrow, .logo-caption, .section-note, .preview-label, .prototype-label, .project-type, .footer-name').count() === 0);
   await page.waitForFunction(() => !document.querySelector('video').paused);
   check('logo animation plays', await page.locator('video').evaluate(v => !v.paused));
