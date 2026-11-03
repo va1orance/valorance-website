@@ -96,7 +96,11 @@ h3 { font-size: 25px; letter-spacing: -.7px; font-weight: 600; margin: 0; }
 /* Unreleased projects share the same surface without pretending to be links. */
 article.project-card:hover, article.project-card:active { transform: none; box-shadow: 7px 7px 18px var(--shade), -5px -5px 15px var(--highlight); }
 .meal-art, .lesson-art { zoom: .85; }
-.meal-art { position: relative; width: 170px; height: 140px; }
+.meal-art { position: relative; width: 140px; height: 140px; }
+.meal-trident { position: absolute; width: 68px; height: 68px; left: 36px; top: 36px; object-fit: contain; }
+.learneth-mark { display: block; width: 140px; height: 140px; border-radius: 22px; object-fit: contain; }
+.lesson-art:has(.learneth-mark) { width: 140px; height: 140px; }
+.meal-plate:has(.meal-trident) { background: var(--surface); box-shadow: none; }
 .meal-plate { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: var(--surface); box-shadow: 5px 5px 12px var(--shade), -4px -4px 12px var(--highlight); }
 .meal-plate svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
 .meal-track, .meal-progress { stroke-width: 5; }

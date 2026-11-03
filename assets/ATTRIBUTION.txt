@@ -1,0 +1,7 @@
+ucsd-trident-gold.png
+Source: https://recstaff.ucsd.edu/_images/triton-graphic/Trident_Gold.png
+UC San Diego trident graphic. Recolored to the Valorance gold accent; background removed. UC San Diego retains its trademark rights. Used here for the owner's private local preview, not as a claim of endorsement.
+
+learneth-silverbullet-gold.png
+Source: https://raw.githubusercontent.com/silverbulletmd/silverbullet/main/client/images/logo.png
+SilverBullet project logo; recolored gold and charcoal for the Learneth project card. Original project: https://github.com/silverbulletmd/silverbullet (MIT). SilverBullet contributors retain the original artwork rights.
