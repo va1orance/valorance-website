@@ -38,7 +38,7 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
       check(`home ${width}px ${theme}: unreleased cards have no dead links`, await page.locator('article.project-card').count() === 2 && await page.locator('article.project-card a').count() === 0);
       check(`home ${width}px ${theme}: artwork fits previews`, await page.locator('.tritonlog-preview, .learneth-preview').evaluateAll(previews => previews.every(p => { const a = p.firstElementChild.getBoundingClientRect(), b = p.getBoundingClientRect(); return a.x >= b.x && a.y >= b.y && a.right <= b.right && a.bottom <= b.bottom; })));
       check(`home ${width}px ${theme}: gold project titles`, await page.locator('.project-heading h3').evaluateAll(es => es.every(e => getComputedStyle(e).color === getComputedStyle(document.querySelector('h1 a')).color)));
-      check(`home ${width}px ${theme}: borderless theme toggle`, await page.locator('#theme-toggle').evaluate(e => getComputedStyle(e).borderTopWidth === '0px' && getComputedStyle(e).boxShadow === 'none'));
+      check(`home ${width}px ${theme}: borderless neumorphic theme toggle`, await page.locator('#theme-toggle').evaluate(e => getComputedStyle(e).borderTopWidth === '0px' && getComputedStyle(e).boxShadow !== 'none'));
       const well = await page.locator('.logo-well').boundingBox();
       const mark = await page.locator('video').boundingBox();
       check(`home ${width}px ${theme}: widescreen inlay`, Math.abs(well.width / well.height - 16 / 9) < .02);

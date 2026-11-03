@@ -53,11 +53,12 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .site-header nav > a, .site-footer a { font-size: 13px; color: var(--muted); padding: 14px 0; transition: color .18s; }
 .site-header nav > a:hover, .site-footer a:hover { color: var(--ink); }
 .site-header nav > a span { margin-left: 4px; }
-.theme-toggle { position: absolute; top: 16px; right: max(22px, calc((100vw - 1080px) / 2)); z-index: 2; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer; box-shadow: none; }
+.theme-toggle { position: absolute; top: 16px; right: max(22px, calc((100vw - 1080px) / 2)); z-index: 2; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--bg); color: var(--ink); cursor: pointer; box-shadow: 5px 5px 12px var(--shade), -5px -5px 12px var(--highlight); }
 .theme-toggle svg { width: 19px; height: 19px; }
 .theme-toggle .moon, [data-theme="light"] .theme-toggle .sun { display: none; }
 [data-theme="light"] .theme-toggle .moon { display: block; }
 .theme-toggle:hover { color: var(--accent); }
+.theme-toggle:active { box-shadow: inset 3px 3px 7px var(--shade), inset -3px -3px 7px var(--highlight); }
 .intro { margin-top: 64px; display: grid; grid-template-columns: 1.45fr 1fr; align-items: center; gap: 60px; padding: 74px 0 78px; }
 h1 { font-size: clamp(36px, 4.2vw, 54px); line-height: 1.16; font-weight: 600; letter-spacing: -2.2px; margin: 0; }
 h1 a { color: var(--accent); text-decoration: underline; text-decoration-color: var(--line); text-decoration-thickness: 1px; text-underline-offset: 8px; transition: color .18s; }
