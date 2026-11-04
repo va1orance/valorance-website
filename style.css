@@ -75,11 +75,9 @@ h1 .accent { color: #ffffff; }
 .val-bed { fill: var(--preview); }
 .val-depth { stroke: #000; stroke-width: 36; stroke-linecap: round; stroke-linejoin: round; fill: #000; }
 .logo-flow { transform: translate(600px, 0); }
-/* Static partial fill without JS; script maps the rounded edge to page scroll.
-   No timed loop or easing lag: scrolling backward drains the same mold. */
+/* Static partial fill without JS. Script applies local transforms to these
+   two SVG elements, avoiding inherited, page-wide style invalidation. */
 .val-dot-fill { transform-box: fill-box; transform-origin: center; transform: scale(0); }
-html[data-scroll-fill] .logo-flow { transform: translate(var(--val-fill-x, -25px), 0); }
-html[data-scroll-fill] .val-dot-fill { transform: scale(var(--val-dot-scale, 0)); }
 .section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; margin-bottom: 24px; }
 h2 { font-size: 15px; font-weight: 600; letter-spacing: -.15px; margin: 0; }
 .project-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }

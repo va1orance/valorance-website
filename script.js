@@ -29,52 +29,73 @@
     const clamp = value => Math.min(1, Math.max(0, value));
     let fillFrame = 0;
     let displayedFill;
-    let fillVelocity = 0;
-    let lastFillTime = 0;
+    let filteredScroll;
+    let carriedFill;
+    let lastFillTime = null;
     // Finish at 65% of the page; damp only while catching up to the scroll.
     const fillScrollSpan = 0.65;
+    const flow = document.querySelector('.logo-flow');
+    const dotFill = document.querySelector('.val-dot-fill');
+    let fillRange = Math.max(0, root.scrollHeight - root.clientHeight);
     root.dataset.scrollFill = '';
     function paintFill(time = performance.now()) {
         fillFrame = 0;
-        const range = root.scrollHeight - root.clientHeight;
-        const target = range > 0 ? clamp(window.scrollY / (range * fillScrollSpan)) : 0;
-        const elapsed = lastFillTime ? Math.min(64, Math.max(0, time - lastFillTime)) : 16.67;
+        const target = fillRange > 0 ? clamp(window.scrollY / (fillRange * fillScrollSpan)) : 0;
+        const elapsed = lastFillTime === null ? 0 : Math.min(100, Math.max(0, time - lastFillTime));
         lastFillTime = time;
         if (displayedFill === undefined || reducedMotion.matches) {
-            displayedFill = target;
-            fillVelocity = 0;
+            displayedFill = filteredScroll = carriedFill = target;
         } else {
-            // Critically damped spring: carry velocity through scroll changes,
-            // easing into motion as well as coasting gently into the target.
-            const dt = elapsed / 1000;
-            const frequency = 7;
-            const offset = displayedFill - target;
-            const impulse = fillVelocity + frequency * offset;
-            const decay = Math.exp(-frequency * dt);
-            displayedFill = target + (offset + impulse * dt) * decay;
-            fillVelocity = (fillVelocity - frequency * impulse * dt) * decay;
-            displayedFill = clamp(displayedFill);
+            // Exact three-stage low-pass integration. Scroll steps first ease
+            // the input, then the velocity, then the visible liquid: continuous
+            // acceleration even with sparse wheel ticks or batched touch events.
+            // Analytic integration gives the same response at 30/60/120 Hz.
+            const k = 8 * elapsed / 1000;
+            const decay = Math.exp(-k);
+            const input = filteredScroll - target;
+            const carry = carriedFill - target;
+            const position = displayedFill - target;
+            filteredScroll = target + input * decay;
+            carriedFill = target + (carry + k * input) * decay;
+            displayedFill = clamp(target + (position + k * carry + k * k * input / 2) * decay);
         }
-        if (Math.abs(target - displayedFill) < 0.0001 && Math.abs(fillVelocity) < 0.001) {
-            displayedFill = target;
-            fillVelocity = 0;
+        if (Math.max(Math.abs(target - displayedFill), Math.abs(target - filteredScroll), Math.abs(target - carriedFill)) < 0.0001) {
+            displayedFill = filteredScroll = carriedFill = target;
         }
         const progress = displayedFill;
         if (progress !== target) fillFrame = requestAnimationFrame(paintFill);
-        else lastFillTime = 0;
-        root.style.setProperty('--val-fill-x', `${-25 + 1130 * progress}px`);
+        else lastFillTime = null;
+        // Local transforms avoid invalidating inherited styles across the page.
+        flow.style.transform = `translate(${-25 + 1130 * progress}px, 0)`;
         // The dot fills over a short interval as the leading edge reaches the A.
         const dot = clamp((progress - 0.475) / 0.025);
-        root.style.setProperty('--val-dot-scale', `${dot * dot * (3 - 2 * dot)}`);
-        if (progress >= 0.18) root.dataset.greetingRaised = '';
+        dotFill.style.transform = `scale(${dot * dot * (3 - 2 * dot)})`;
+        if (progress >= 0.18 && !root.hasAttribute('data-greeting-raised')) root.dataset.greetingRaised = '';
     }
     function scheduleFill() {
-        if (!fillFrame) fillFrame = requestAnimationFrame(paintFill);
+        if (!fillFrame && !document.hidden) {
+            lastFillTime = performance.now();
+            fillFrame = requestAnimationFrame(paintFill);
+        }
     }
-    window.addEventListener('scroll', scheduleFill, {passive: true});
-    window.addEventListener('resize', scheduleFill, {passive: true});
-    window.addEventListener('pageshow', scheduleFill);
-    new ResizeObserver(scheduleFill).observe(document.body);
+    function measureFill() {
+        fillRange = Math.max(0, root.scrollHeight - root.clientHeight);
+        scheduleFill();
+    }
+    window.addEventListener('scroll', measureFill, {passive: true});
+    // The greeting's transform can change document overflow without resizing
+    // the body. Refresh once it reaches its resting position as well.
+    document.addEventListener('animationend', measureFill);
+    window.addEventListener('resize', measureFill, {passive: true});
+    window.addEventListener('pageshow', measureFill);
+    new ResizeObserver(measureFill).observe(document.body);
+    reducedMotion.addEventListener('change', scheduleFill);
+    document.addEventListener('visibilitychange', () => {
+        cancelAnimationFrame(fillFrame);
+        fillFrame = 0;
+        lastFillTime = null;
+        if (!document.hidden) measureFill();
+    });
     paintFill();
     // One frame per pointer update; shadows are cast away from the light.
     const finePointer = matchMedia('(hover: hover) and (pointer: fine)');

@@ -47,7 +47,7 @@ const fs=require('node:fs');
   const values=[];
   for(let i=0;i<12;i++){
    await new Promise(requestAnimationFrame);
-   values.push(parseFloat(document.documentElement.style.getPropertyValue('--val-fill-x')));
+   values.push(new DOMMatrix(getComputedStyle(document.querySelector('.logo-flow')).transform).e);
   }
   return values;
  });
@@ -56,7 +56,7 @@ const fs=require('node:fs');
  // Momentum should remain visibly behind the target after the first frames.
  assert.ok(frames[11]<900);checks++;
  await smooth.waitForTimeout(2200);
- assert.equal(await smooth.evaluate(()=>parseFloat(document.documentElement.style.getPropertyValue('--val-fill-x'))),1105);checks++;
+ assert.equal(await smooth.evaluate(()=>new DOMMatrix(getComputedStyle(document.querySelector('.logo-flow')).transform).e),1105);checks++;
  await smooth.screenshot({path:`${dir}/desktop-filled.png`,fullPage:true});
  assert.deepEqual(errors,[]);checks++;
  await browser.close();console.log(JSON.stringify({checks,errors,artifacts:dir}));
