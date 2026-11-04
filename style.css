@@ -53,7 +53,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .site-header nav > a, .site-footer a { font-size: 13px; color: var(--muted); padding: 14px 0; transition: color .18s; }
 .site-header nav > a:hover, .site-footer a:hover { color: var(--ink); }
 .site-header nav > a span { margin-left: 4px; }
-.theme-toggle { position: absolute; top: 16px; right: max(22px, calc((100vw - 1080px) / 2)); z-index: 2; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--bg); color: var(--ink); cursor: pointer; box-shadow: 5px 5px 12px var(--shade), -5px -5px 12px var(--highlight); }
+.theme-toggle { position: fixed; bottom: max(24px, env(safe-area-inset-bottom)); left: max(24px, env(safe-area-inset-left)); z-index: 5; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--bg); color: var(--ink); cursor: pointer; box-shadow: 5px 5px 12px var(--shade), -5px -5px 12px var(--highlight); }
 .theme-toggle svg { width: 19px; height: 19px; }
 .theme-toggle .moon, [data-theme="light"] .theme-toggle .sun { display: none; }
 [data-theme="light"] .theme-toggle .moon { display: block; }
@@ -182,6 +182,8 @@ article.project-card:hover, article.project-card:active { transform: none; box-s
     .site-footer { align-items: flex-start; flex-direction: column; gap: 4px; margin-top: 40px; padding: 23px 0; }
     .site-footer > div { width: 100%; justify-content: space-between; }
 }
+/* Breathing room above the hero and below the floating theme control. */
+.site-shell { padding-top: clamp(40px, 6vw, 88px); padding-bottom: 96px; }
 /* A soft moving light, with raised and inset shadows facing opposite ways. */
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
     html[data-pointer-light] body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 3; background: radial-gradient(circle 420px at var(--light-x) var(--light-y), rgba(255, 243, 211, .045), transparent 100%); }
