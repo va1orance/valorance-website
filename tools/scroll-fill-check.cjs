@@ -12,7 +12,7 @@ const fs=require('node:fs');
   await page.addStyleTag({content:'html {scroll-behavior:auto!important}'});
   async function sample(p){
    await page.evaluate(p=>window.scrollTo(0,(document.documentElement.scrollHeight-innerHeight)*p*0.65),p);
-   await page.waitForTimeout(1100);
+   await page.waitForTimeout(2200);
    return page.evaluate(()=>({x:new DOMMatrix(getComputedStyle(document.querySelector('.logo-flow')).transform).e,dot:new DOMMatrix(getComputedStyle(document.querySelector('.val-dot-fill')).transform).a,raised:document.documentElement.hasAttribute('data-greeting-raised'),overflow:document.documentElement.scrollWidth>innerWidth,loop:document.getAnimations().some(a=>['val-fill','val-dot-fill'].includes(a.animationName))}));
   }
   for(const progress of [0,.25,.475,.49,.5,.75,1,.25,0]){
@@ -53,7 +53,9 @@ const fs=require('node:fs');
  });
  assert.ok(frames[0]<1105 && frames[11]>frames[0]);checks++;
  assert.ok(frames.every((x,i)=>i===0||x>=frames[i-1]));checks++;
- await smooth.waitForTimeout(1200);
+ // Momentum should remain visibly behind the target after the first frames.
+ assert.ok(frames[11]<900);checks++;
+ await smooth.waitForTimeout(2200);
  assert.equal(await smooth.evaluate(()=>parseFloat(document.documentElement.style.getPropertyValue('--val-fill-x'))),1105);checks++;
  await smooth.screenshot({path:`${dir}/desktop-filled.png`,fullPage:true});
  assert.deepEqual(errors,[]);checks++;

@@ -29,6 +29,7 @@
     const clamp = value => Math.min(1, Math.max(0, value));
     let fillFrame = 0;
     let displayedFill;
+    let fillVelocity = 0;
     let lastFillTime = 0;
     // Finish at 65% of the page; damp only while catching up to the scroll.
     const fillScrollSpan = 0.65;
@@ -39,9 +40,25 @@
         const target = range > 0 ? clamp(window.scrollY / (range * fillScrollSpan)) : 0;
         const elapsed = lastFillTime ? Math.min(64, Math.max(0, time - lastFillTime)) : 16.67;
         lastFillTime = time;
-        if (displayedFill === undefined || reducedMotion.matches) displayedFill = target;
-        else displayedFill += (target - displayedFill) * (1 - Math.exp(-elapsed / 110));
-        if (Math.abs(target - displayedFill) < 0.0001) displayedFill = target;
+        if (displayedFill === undefined || reducedMotion.matches) {
+            displayedFill = target;
+            fillVelocity = 0;
+        } else {
+            // Critically damped spring: carry velocity through scroll changes,
+            // easing into motion as well as coasting gently into the target.
+            const dt = elapsed / 1000;
+            const frequency = 7;
+            const offset = displayedFill - target;
+            const impulse = fillVelocity + frequency * offset;
+            const decay = Math.exp(-frequency * dt);
+            displayedFill = target + (offset + impulse * dt) * decay;
+            fillVelocity = (fillVelocity - frequency * impulse * dt) * decay;
+            displayedFill = clamp(displayedFill);
+        }
+        if (Math.abs(target - displayedFill) < 0.0001 && Math.abs(fillVelocity) < 0.001) {
+            displayedFill = target;
+            fillVelocity = 0;
+        }
         const progress = displayedFill;
         if (progress !== target) fillFrame = requestAnimationFrame(paintFill);
         else lastFillTime = 0;
