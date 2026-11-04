@@ -59,7 +59,7 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   check('YouTube footer and bottom bar removed', await page.locator('footer, .site-footer').count() === 0);
   check('header removed entirely', await page.locator('header, .site-header, .wordmark').count() === 0);
   check('decorative microcopy removed', await page.locator('.eyebrow, .logo-caption, .section-note, .preview-label, .prototype-label, .project-type, .footer-name').count() === 0);
-  check('logo animation plays', await page.locator('.logo-flow').evaluate(e => getComputedStyle(e).animationName === 'val-fill'));
+  check('logo uses scroll progress instead of a timed loop', await page.locator('.logo-flow').evaluate(e => getComputedStyle(e).animationName === 'none' && document.documentElement.hasAttribute('data-scroll-fill')));
   await page.mouse.move(20, 100);
   await page.waitForTimeout(350);
   const leftShadow = await page.locator('.night-card').evaluate(e => getComputedStyle(e).boxShadow);

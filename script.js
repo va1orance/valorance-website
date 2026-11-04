@@ -25,6 +25,28 @@
         if (!userSelected) applyTheme(event.matches ? 'light' : 'dark');
     });
     document.addEventListener('visibilitychange', () => root.toggleAttribute('data-page-hidden', document.hidden));
+    // Scroll position is the sole fill clock, including restored scroll on reload.
+    const clamp = value => Math.min(1, Math.max(0, value));
+    let fillFrame = 0;
+    root.dataset.scrollFill = '';
+    function paintFill() {
+        fillFrame = 0;
+        const range = root.scrollHeight - root.clientHeight;
+        const progress = range > 0 ? clamp(window.scrollY / range) : 0;
+        root.style.setProperty('--val-fill-x', `${-25 + 1130 * progress}px`);
+        // The dot fills over a short interval as the leading edge reaches the A.
+        const dot = clamp((progress - 0.475) / 0.025);
+        root.style.setProperty('--val-dot-scale', `${dot * dot * (3 - 2 * dot)}`);
+        if (progress >= 0.18) root.dataset.greetingRaised = '';
+    }
+    function scheduleFill() {
+        if (!fillFrame) fillFrame = requestAnimationFrame(paintFill);
+    }
+    window.addEventListener('scroll', scheduleFill, {passive: true});
+    window.addEventListener('resize', scheduleFill, {passive: true});
+    window.addEventListener('pageshow', scheduleFill);
+    new ResizeObserver(scheduleFill).observe(document.body);
+    paintFill();
     // One frame per pointer update; shadows are cast away from the light.
     const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
     const surfaces = [...document.querySelectorAll('.project-card, .logo-banner, .theme-toggle')];

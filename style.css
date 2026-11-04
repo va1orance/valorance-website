@@ -75,25 +75,11 @@ h1 .accent { color: #ffffff; }
 .val-bed { fill: var(--preview); }
 .val-depth { stroke: #000; stroke-width: 36; stroke-linecap: round; stroke-linejoin: round; fill: #000; }
 .logo-flow { transform: translate(600px, 0); }
-/* Opaque gold reveals the mold left to right; the filled area stays filled.
-   The same edge retreats on the return pass, without a gravity-driven pour. */
-@keyframes val-fill {
-    0%, 5% { transform: translate(-25px, 0); }
-    45%, 55% { transform: translate(1105px, 0); }
-    95%, 100% { transform: translate(-25px, 0); }
-}
+/* Static partial fill without JS; script maps the rounded edge to page scroll.
+   No timed loop or easing lag: scrolling backward drains the same mold. */
 .val-dot-fill { transform-box: fill-box; transform-origin: center; transform: scale(0); }
-/* The lines finish at 45%; only then does the center dot fill. */
-@keyframes val-dot-fill {
-    0%, 45% { transform: scale(0); }
-    50%, 54% { transform: scale(1); }
-    55%, 100% { transform: scale(0); }
-}
-@media (prefers-reduced-motion: no-preference) {
-    .logo-flow { animation: val-fill 12s ease-in-out infinite; }
-    .val-dot-fill { animation: val-dot-fill 12s ease-in-out infinite; }
-}
-html[data-page-hidden] :is(.logo-flow, .val-dot-fill) { animation-play-state: paused; }
+html[data-scroll-fill] .logo-flow { transform: translate(var(--val-fill-x, -25px), 0); }
+html[data-scroll-fill] .val-dot-fill { transform: scale(var(--val-dot-scale, 0)); }
 .section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; margin-bottom: 24px; }
 h2 { font-size: 15px; font-weight: 600; letter-spacing: -.15px; margin: 0; }
 .project-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
@@ -220,7 +206,8 @@ html[data-page-hidden] .intro-copy { animation-play-state: paused; }
     50%, 95% { opacity: 0; }
 }
 @media (prefers-reduced-motion: no-preference) {
-    .intro-copy { animation: val-greeting-rise 1.2s cubic-bezier(.4,0,.2,1) 2.1s both; }
+    html[data-scroll-fill]:not([data-greeting-raised]) .intro-copy { transform: translateY(calc(var(--hero-height) / 2 - 50% - var(--greeting-top))); }
+    html[data-greeting-raised] .intro-copy { animation: val-greeting-rise 1.2s cubic-bezier(.4,0,.2,1) both; }
     .project-card { animation: settle-in .65s .16s cubic-bezier(.2,.7,.2,1) backwards; }
     .project-card:nth-child(2) { animation-delay: .24s; }
     .game-word { transition: translate .35s cubic-bezier(.2,.7,.2,1); }
