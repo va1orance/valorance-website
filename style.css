@@ -196,8 +196,8 @@ article.project-card:hover, article.project-card:active { transform: none; box-s
 }
 /* The greeting clears the mold during the first fill, then stays above it. */
 @keyframes val-greeting-rise {
-    0%, 12% { transform: translateY(calc(var(--hero-height) / 2 - 50% - var(--greeting-top))); }
-    90%, 100% { transform: translateY(0); }
+    from { transform: translateY(calc(var(--hero-height) / 2 - 50% - var(--greeting-top))); }
+    to { transform: translateY(0); }
 }
 html[data-page-hidden] .intro-copy { animation-play-state: paused; }
 @keyframes settle-in {
@@ -209,7 +209,7 @@ html[data-page-hidden] .intro-copy { animation-play-state: paused; }
     50%, 95% { opacity: 0; }
 }
 @media (prefers-reduced-motion: no-preference) {
-    .intro-copy { animation: val-greeting-rise 2s cubic-bezier(.4,0,.2,1) both; }
+    .intro-copy { animation: val-greeting-rise .8s cubic-bezier(.4,0,.2,1) .65s both; }
     .project-card { animation: settle-in .65s .16s cubic-bezier(.2,.7,.2,1) backwards; }
     .project-card:nth-child(2) { animation-delay: .24s; }
     .game-word { transition: translate .35s cubic-bezier(.2,.7,.2,1); }
