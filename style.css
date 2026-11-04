@@ -209,7 +209,7 @@ html[data-page-hidden] .intro-copy { animation-play-state: paused; }
     50%, 95% { opacity: 0; }
 }
 @media (prefers-reduced-motion: no-preference) {
-    .intro-copy { animation: val-greeting-rise .8s cubic-bezier(.4,0,.2,1) 2.1s both; }
+    .intro-copy { animation: val-greeting-rise 1.2s cubic-bezier(.4,0,.2,1) 2.1s both; }
     .project-card { animation: settle-in .65s .16s cubic-bezier(.2,.7,.2,1) backwards; }
     .project-card:nth-child(2) { animation-delay: .24s; }
     .game-word { transition: translate .35s cubic-bezier(.2,.7,.2,1); }
