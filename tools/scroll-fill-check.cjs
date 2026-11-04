@@ -11,8 +11,8 @@ const fs=require('node:fs');
   await page.goto(process.env.PREVIEW_URL||'http://100.64.0.15:8788/');
   await page.addStyleTag({content:'html {scroll-behavior:auto!important}'});
   async function sample(p){
-   await page.evaluate(p=>window.scrollTo(0,(document.documentElement.scrollHeight-innerHeight)*p),p);
-   await page.waitForTimeout(80);
+   await page.evaluate(p=>window.scrollTo(0,(document.documentElement.scrollHeight-innerHeight)*p*0.65),p);
+   await page.waitForTimeout(1100);
    return page.evaluate(()=>({x:new DOMMatrix(getComputedStyle(document.querySelector('.logo-flow')).transform).e,dot:new DOMMatrix(getComputedStyle(document.querySelector('.val-dot-fill')).transform).a,raised:document.documentElement.hasAttribute('data-greeting-raised'),overflow:document.documentElement.scrollWidth>innerWidth,loop:document.getAnimations().some(a=>['val-fill','val-dot-fill'].includes(a.animationName))}));
   }
   for(const progress of [0,.25,.475,.49,.5,.75,1,.25,0]){
@@ -21,7 +21,7 @@ const fs=require('node:fs');
    assert.equal(state.overflow,false);checks++;
    assert.equal(state.loop,false);checks++;
    if(progress===0)assert.equal(state.dot,0);
-   if(progress>=.5)assert.equal(state.dot,1);
+   if(progress>=.5)assert.ok(state.dot>0.999); // Pixel-rounded scroll offsets can stop just short.
    if(progress===.49)assert.ok(state.dot>0&&state.dot<1);
    checks++;
    if(progress===.5){
@@ -39,6 +39,23 @@ const fs=require('node:fs');
  assert.equal(await page.locator('.intro-copy').evaluate(e=>getComputedStyle(e).animationName),'none');checks++;
  await page.evaluate(()=>scrollTo(0,document.documentElement.scrollHeight));await page.waitForTimeout(100);
  assert.equal(await page.locator('.val-dot-fill').evaluate(e=>new DOMMatrix(getComputedStyle(e).transform).a),1);checks++;
+ const smooth=await browser.newPage({viewport:{width:1440,height:900}});
+ await smooth.goto(process.env.PREVIEW_URL||'http://100.64.0.15:8788/');
+ await smooth.addStyleTag({content:'html {scroll-behavior:auto!important}'});
+ const frames=await smooth.evaluate(async()=>{
+  scrollTo(0,(document.documentElement.scrollHeight-innerHeight)*0.65);
+  const values=[];
+  for(let i=0;i<12;i++){
+   await new Promise(requestAnimationFrame);
+   values.push(parseFloat(document.documentElement.style.getPropertyValue('--val-fill-x')));
+  }
+  return values;
+ });
+ assert.ok(frames[0]<1105 && frames[11]>frames[0]);checks++;
+ assert.ok(frames.every((x,i)=>i===0||x>=frames[i-1]));checks++;
+ await smooth.waitForTimeout(1200);
+ assert.equal(await smooth.evaluate(()=>parseFloat(document.documentElement.style.getPropertyValue('--val-fill-x'))),1105);checks++;
+ await smooth.screenshot({path:`${dir}/desktop-filled.png`,fullPage:true});
  assert.deepEqual(errors,[]);checks++;
  await browser.close();console.log(JSON.stringify({checks,errors,artifacts:dir}));
 })().catch(e=>{console.error(e);process.exit(1)});

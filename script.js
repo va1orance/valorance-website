@@ -28,11 +28,23 @@
     // Scroll position is the sole fill clock, including restored scroll on reload.
     const clamp = value => Math.min(1, Math.max(0, value));
     let fillFrame = 0;
+    let displayedFill;
+    let lastFillTime = 0;
+    // Finish at 65% of the page; damp only while catching up to the scroll.
+    const fillScrollSpan = 0.65;
     root.dataset.scrollFill = '';
-    function paintFill() {
+    function paintFill(time = performance.now()) {
         fillFrame = 0;
         const range = root.scrollHeight - root.clientHeight;
-        const progress = range > 0 ? clamp(window.scrollY / range) : 0;
+        const target = range > 0 ? clamp(window.scrollY / (range * fillScrollSpan)) : 0;
+        const elapsed = lastFillTime ? Math.min(64, Math.max(0, time - lastFillTime)) : 16.67;
+        lastFillTime = time;
+        if (displayedFill === undefined || reducedMotion.matches) displayedFill = target;
+        else displayedFill += (target - displayedFill) * (1 - Math.exp(-elapsed / 110));
+        if (Math.abs(target - displayedFill) < 0.0001) displayedFill = target;
+        const progress = displayedFill;
+        if (progress !== target) fillFrame = requestAnimationFrame(paintFill);
+        else lastFillTime = 0;
         root.style.setProperty('--val-fill-x', `${-25 + 1130 * progress}px`);
         // The dot fills over a short interval as the leading edge reaches the A.
         const dot = clamp((progress - 0.475) / 0.025);
