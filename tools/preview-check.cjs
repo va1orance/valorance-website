@@ -30,7 +30,7 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
       await page.goto(base + '/', {waitUntil: 'domcontentloaded'});
       await page.evaluate(t => localStorage.setItem('theme', t), theme);
       await page.reload({waitUntil: 'domcontentloaded'});
-      await page.evaluate(() => Promise.all(document.getAnimations().map(a => a.finished.catch(() => {}))));
+      await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {}))));
       check(`home ${width}px ${theme}: no horizontal overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       check(`home ${width}px ${theme}: theme applied`, await page.locator('html').getAttribute('data-theme') === theme);
       check(`home ${width}px ${theme}: borderless cards`, await page.locator('.project-card').evaluateAll(cards => cards.every(c => getComputedStyle(c).borderTopWidth === '0px')));
@@ -39,18 +39,10 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
       check(`home ${width}px ${theme}: artwork fits previews`, await page.locator('.tritonlog-preview, .learneth-preview').evaluateAll(previews => previews.every(p => { const a = p.firstElementChild.getBoundingClientRect(), b = p.getBoundingClientRect(); return a.x >= b.x && a.y >= b.y && a.right <= b.right && a.bottom <= b.bottom; })));
       check(`home ${width}px ${theme}: gold project titles`, await page.locator('.project-heading h3').evaluateAll(es => es.every(e => getComputedStyle(e).color === getComputedStyle(document.querySelector('h1 a')).color)));
       check(`home ${width}px ${theme}: borderless neumorphic theme toggle`, await page.locator('#theme-toggle').evaluate(e => getComputedStyle(e).borderTopWidth === '0px' && getComputedStyle(e).boxShadow !== 'none'));
-      const well = await page.locator('.logo-well').boundingBox();
-      const mark = await page.locator('video').boundingBox();
-      check(`home ${width}px ${theme}: widescreen inlay`, Math.abs(well.width / well.height - 16 / 9) < .02);
-      check(`home ${width}px ${theme}: compact original inlay`, well.width <= (width <= 560 ? 240 : width <= 760 ? 210 : 340) + 1);
-      check(`home ${width}px ${theme}: centered enlarged undistorted logo`, Math.abs(mark.width - mark.height) < 1 && Math.abs(mark.x + mark.width / 2 - well.x - well.width / 2) < 1 && Math.abs(mark.y + mark.height / 2 - well.y - well.height / 2) < 1 && mark.height >= well.height * 1.6);
-      if (width <= 560) {
-        const copy = await page.locator('.intro-copy').boundingBox();
-        const logo = await page.locator('.logo-well').boundingBox();
-        const video = await page.locator('video').boundingBox();
-        check(`home ${width}px ${theme}: logo below intro`, logo.y >= copy.y + copy.height);
-        check(`home ${width}px ${theme}: logo scales within well`, logo.width >= 200 && video.width <= logo.width && Math.abs(video.width - video.height) < 1);
-      }
+      const banner = await page.locator('.logo-banner').boundingBox();
+      const intro = await page.locator('.intro').boundingBox();
+      check(`home ${width}px ${theme}: full-width background inlay`, Math.abs(banner.width - intro.width) < 1);
+      check(`home ${width}px ${theme}: SVG inlay present`, await page.locator('.logo-banner svg').count() === 1);
       const scan = await new AxeBuilder({page}).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
       result.accessibility.push({width, theme, violations: scan.violations.map(v => ({id: v.id, impact: v.impact, nodes: v.nodes.map(n => n.target)}))});
       check(`home ${width}px ${theme}: WCAG automated scan`, scan.violations.length === 0);
@@ -67,8 +59,7 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   check('YouTube footer and bottom bar removed', await page.locator('footer, .site-footer').count() === 0);
   check('header removed entirely', await page.locator('header, .site-header, .wordmark').count() === 0);
   check('decorative microcopy removed', await page.locator('.eyebrow, .logo-caption, .section-note, .preview-label, .prototype-label, .project-type, .footer-name').count() === 0);
-  await page.waitForFunction(() => !document.querySelector('video').paused);
-  check('logo animation plays', await page.locator('video').evaluate(v => !v.paused));
+  check('logo animation plays', await page.locator('.logo-flow').evaluate(e => getComputedStyle(e).animationName === 'val-tide'));
   await page.mouse.move(20, 100);
   await page.waitForTimeout(350);
   const leftShadow = await page.locator('.night-card').evaluate(e => getComputedStyle(e).boxShadow);
@@ -76,7 +67,7 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   await page.mouse.move(1400, 100);
   await page.waitForTimeout(350);
   check('project shadows track cursor across page', leftShadow !== await page.locator('.night-card').evaluate(e => getComputedStyle(e).boxShadow));
-  check('logo and theme toggle track cursor', await page.locator('.logo-well, .theme-toggle').evaluateAll(es => es.every(e => e.style.getPropertyValue('--light-dx') !== '')));
+  check('logo and theme toggle track cursor', await page.locator('.logo-banner, .theme-toggle').evaluateAll(es => es.every(e => e.style.getPropertyValue('--light-dx') !== '')));
   await page.evaluate(() => document.documentElement.dispatchEvent(new PointerEvent('pointerleave')));
   check('cursor light resets on exit', await page.locator('html').getAttribute('data-pointer-light') === null);
   await page.keyboard.press('Control+Home');
@@ -115,8 +106,8 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   check('reduced motion: no video downloads', await rp.locator('video source').count() === 0);
   await rp.mouse.move(100, 100);
   check('reduced motion: cursor light disabled', await rp.locator('html').getAttribute('data-pointer-light') === null);
-  check('reduced motion: video paused', await rp.locator('video').evaluate(v => v.paused));
-  check('reduced motion: entrance disabled', await rp.locator('.logo-well').evaluate(e => getComputedStyle(e).animationName === 'none'));
+  check('reduced motion: inlay static', await rp.locator('.logo-flow').evaluate(e => getComputedStyle(e).animationName === 'none'));
+  check('reduced motion: entrance disabled', await rp.locator('.logo-banner').evaluate(e => getComputedStyle(e).animationName === 'none'));
   check('reduced motion: hover movement disabled', await rp.locator('.game-word').first().evaluate(e => getComputedStyle(e).transitionDuration === '0s'));
   check('reduced motion: pause button hidden', await rp.locator('#motion-toggle').count() === 0);
   const blocked = await browser.newContext({colorScheme:'dark'});
@@ -135,8 +126,8 @@ const check = (name, value) => { assert.ok(value, name); result.checks.push(name
   check('Night navigates without JS', np.url() === base + '/night/');
   check('no uncaught browser errors', result.errors.length === 0);
   await page.goto(base + '/', {waitUntil: 'domcontentloaded'});
-  await page.evaluate(() => Promise.all(document.getAnimations().map(a => a.finished.catch(() => {}))));
-  await page.waitForFunction(() => document.querySelector('video').readyState >= 2);
+  await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {}))));
+  await page.waitForSelector('.logo-flow');
   await page.setViewportSize({width:1440,height:1080});
   await page.screenshot({path:path.join(artifacts, 'desktop.png'),fullPage:true});
   await page.setViewportSize({width:390,height:844});

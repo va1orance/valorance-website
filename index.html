@@ -30,8 +30,28 @@
                 <div class="intro-copy">
                     <h1 id="intro-title">Hi, I'm <a href="https://www.youtube.com/@va1orance" target="_blank" rel="noopener noreferrer">Valorance<span class="sr-only"> (YouTube, opens in new tab)</span></a><span class="accent">.</span></h1>
                 </div>
-                <div class="logo-well">
-                    <video id="logo-video" autoplay loop muted playsinline preload="metadata" poster="night/images/val_backgroundless.png" tabindex="-1" aria-hidden="true"></video>
+                <div class="logo-banner" aria-hidden="true">
+                    <svg viewBox="0 0 1080 420" fill="none" focusable="false">
+                        <defs>
+                            <path id="val-shape" d="M35 60H140L335 360L530 60L725 360M725 60L920 360H1045"/>
+                            <mask id="val-channel"><use href="#val-shape" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/><circle cx="530" cy="252" r="18" fill="white"/></mask>
+                            <linearGradient id="val-liquid"><stop stop-color="#a97918" stop-opacity="0"/><stop offset=".25" stop-color="#b18a31" stop-opacity=".25"/><stop offset=".5" stop-color="#e5c46a" stop-opacity=".85"/><stop offset=".75" stop-color="#b18a31" stop-opacity=".25"/><stop offset="1" stop-color="#a97918" stop-opacity="0"/></linearGradient>
+                            <filter id="val-depth" x="-10%" y="-20%" width="120%" height="140%" color-interpolation-filters="sRGB">
+                                <feComponentTransfer in="SourceAlpha" result="inverse"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+                                <feGaussianBlur in="inverse" stdDeviation="3" result="blur"/>
+                                <feOffset in="blur" dx="3" dy="4" result="offset"/>
+                                <feComposite in="offset" in2="SourceAlpha" operator="in" result="edge"/>
+                                <feFlood flood-color="#000" flood-opacity=".7"/>
+                                <feComposite in2="edge" operator="in"/>
+                            </filter>
+                        </defs>
+                        <g class="val-rim"><use href="#val-shape"/><circle cx="530" cy="252" r="18"/></g>
+                        <g mask="url(#val-channel)">
+                            <rect class="val-bed" width="1080" height="420"/>
+                            <rect class="logo-flow" x="-500" width="760" height="420" fill="url(#val-liquid)"/>
+                        </g>
+                        <g class="val-depth" filter="url(#val-depth)"><use href="#val-shape"/><circle cx="530" cy="252" r="18"/></g>
+                    </svg>
                 </div>
             </section>
 
