@@ -19,22 +19,23 @@ const {chromium} = require('playwright');
   }
   async function sample(time) {
     return page.evaluate(t => {
-      document.getAnimations().filter(a => ['val-fill','val-pour','val-stream'].includes(a.animationName)).forEach(a => {a.pause(); a.currentTime=t;});
+      document.getAnimations().filter(a => ['val-fill'].includes(a.animationName)).forEach(a => {a.pause(); a.currentTime=t;});
       const style = getComputedStyle(document.querySelector('.logo-flow'));
       const m = new DOMMatrix(style.transform);
-      return {x:m.m41,y:m.m42,pour:Number(getComputedStyle(document.querySelector('.val-pour')).opacity),stream:parseFloat(getComputedStyle(document.querySelector('.val-stream')).strokeDashoffset)};
+      return {x:m.m41,y:m.m42};
     }, time);
   }
-  const empty=await sample(0), early=await sample(2000), mid=await sample(6000), full=await sample(9800);
-  assert.ok(empty.y>early.y && early.y>mid.y && mid.y>full.y, 'pool accumulates from bottom to top');
-  assert.ok(Math.abs(mid.x)<20, 'no sweeping light panel');
-  assert.ok(early.pour>.8 && early.stream<.1, 'visible streams feed the pool');
+  const empty=await sample(0), early=await sample(2000), mid=await sample(3000), full=await sample(6000), returning=await sample(9000);
+  assert.ok(empty.x<early.x && early.x<mid.x && mid.x<full.x, 'gold reveals mold from left to right');
+  assert.ok([empty,early,mid,full,returning].every(s=>s.y===0), 'no gravity-driven vertical movement');
+  assert.ok(returning.x<full.x && returning.x>empty.x, 'return pass moves back to the left');
+  assert.equal(await page.locator('.val-pour, .val-stream').count(),0,'gravity-fed streams removed');
   assert.equal(await page.locator('#val-liquid stop[stop-opacity]').count(),0,'liquid is opaque, not translucent light');
   for (const width of [1440,390]) {
     await page.setViewportSize({width,height:900});
     for (const theme of ['dark','light']) {
       await page.evaluate(t=>document.documentElement.dataset.theme=t,theme);
-      for (const [name,time] of [['empty',0],['pour',2000],['half',6000],['full',9800]]) {
+      for (const [name,time] of [['empty',0],['reveal',2000],['half',3000],['full',6000]]) {
         await sample(time);
         await page.locator('.intro').screenshot({path:`${artifacts}/${width}-${theme}-${name}.png`});
       }
@@ -42,7 +43,7 @@ const {chromium} = require('playwright');
   }
   await page.emulateMedia({reducedMotion:'reduce'});
   assert.equal(await page.locator('.logo-flow').evaluate(e=>getComputedStyle(e).animationName),'none');
-  assert.equal(await page.locator('.val-pour').evaluate(e=>getComputedStyle(e).opacity),'0');
+  assert.equal((await sample(3000)).x,600,'reduced motion retains static partial fill');
   await browser.close();
-  console.log('Hero passed: rising opaque liquid, feeding streams, no light sweep, four viewport sizes, both themes, reduced motion. 16 phase screenshots captured.');
+  console.log('Hero passed: opaque left-to-right fill, leftward return, no gravity streams or vertical movement, four viewport sizes, both themes, reduced motion. 16 phase screenshots captured.');
 })().catch(e=>{console.error(e);process.exit(1);});
