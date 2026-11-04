@@ -153,8 +153,8 @@ article.project-card:hover, article.project-card:active { transform: none; box-s
 .site-footer > div { display: flex; align-items: center; gap: 30px; }
 .site-footer a { font-size: 11px; }
 /* Give the settled greeting more clearance above the full-size mold. */
-@media (min-width: 1024px) { .intro { --greeting-top: -68px; } }
-@media (min-width: 1500px) { .intro { --hero-height: 430px; --greeting-top: -76px; } }
+@media (min-width: 1024px) { .intro { --greeting-top: -88px; } }
+@media (min-width: 1500px) { .intro { --hero-height: 430px; --greeting-top: -96px; } }
 @media (max-width: 760px) {
     .site-shell { padding: 0 24px; }
     .site-header { min-height: 88px; }
