@@ -19,17 +19,22 @@ const {chromium} = require('playwright');
   }
   async function sample(time) {
     return page.evaluate(t => {
-      document.getAnimations().filter(a => ['val-fill','val-greeting-rise'].includes(a.animationName)).forEach(a => {a.pause(); a.currentTime=t;});
+      document.getAnimations().filter(a => ['val-fill','val-greeting-rise','val-dot-fill'].includes(a.animationName)).forEach(a => {a.pause(); a.currentTime=t;});
       const style = getComputedStyle(document.querySelector('.logo-flow'));
       const m = new DOMMatrix(style.transform);
       const title = document.querySelector('h1').getBoundingClientRect();
-      return {x:m.m41,y:m.m42,titleY:title.y};
+      const dot = new DOMMatrix(getComputedStyle(document.querySelector(".val-dot-fill")).transform).a;
+      return {x:m.m41,y:m.m42,titleY:title.y,dot};
     }, time);
   }
   const empty=await sample(0), early=await sample(2000), mid=await sample(3000), full=await sample(6000), returning=await sample(9000);
   assert.ok(empty.x<early.x && early.x<mid.x && mid.x<full.x, 'gold reveals mold from left to right');
   assert.ok([empty,early,mid,full,returning].every(s=>s.y===0), 'no gravity-driven vertical movement');
   assert.ok(returning.x<full.x && returning.x>empty.x, 'return pass moves back to the left');
+  assert.equal((await sample(5400)).dot,0,'dot stays empty until lines are full');
+  assert.ok((await sample(5700)).dot>0 && (await sample(5700)).dot<1,'dot fills only after lines complete');
+  assert.equal((await sample(6000)).dot,1,'dot fills after all lines');
+  assert.equal(await page.locator('#val-rounded-liquid [mask="url(#val-lines)"]').count(),1,'line fill mask excludes dot');
   const greetingHeld=await sample(2100), greetingMid=await sample(2700), greetingDone=await sample(3300);
   assert.equal(greetingHeld.titleY,empty.titleY,'greeting holds until the screenshot-confirmed fill approach at 2.1s');
   assert.ok(empty.titleY>greetingMid.titleY && greetingMid.titleY>greetingDone.titleY,'greeting rises quickly during first fill');
