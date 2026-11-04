@@ -59,8 +59,8 @@ a, button { -webkit-tap-highlight-color: transparent; }
 [data-theme="light"] .theme-toggle .moon { display: block; }
 .theme-toggle:hover { color: var(--accent); }
 .theme-toggle:active { box-shadow: inset 3px 3px 7px var(--shade), inset -3px -3px 7px var(--highlight); }
-.intro { position: relative; isolation: isolate; margin-top: 76px; min-height: 340px; display: grid; place-items: center; padding: 80px 0; margin-bottom: 36px; }
-.intro-copy { position: relative; z-index: 1; text-align: center; padding: 28px 34px; border-radius: 50%; background: radial-gradient(ellipse closest-side, var(--bg) 55%, transparent 100%); }
+.intro { --hero-height: 420px; --greeting-top: -40px; position: relative; isolation: isolate; margin-top: 76px; min-height: 340px; display: grid; place-items: center; padding: 80px 0; margin-bottom: 36px; }
+.intro-copy { position: absolute; top: var(--greeting-top); z-index: 1; text-align: center; padding: 28px 34px; border-radius: 50%; background: radial-gradient(ellipse closest-side, var(--bg) 55%, transparent 100%); }
 h1 { font-size: clamp(36px, 4.2vw, 54px); line-height: 1.16; font-weight: 600; letter-spacing: -2.2px; margin: 0; }
 h1 a { color: var(--accent); text-decoration: underline; text-decoration-color: var(--line); text-decoration-thickness: 1px; text-underline-offset: 8px; transition: color .18s; }
 h1 a:hover { color: var(--accent); }
@@ -71,11 +71,10 @@ h1 .accent { color: #ffffff; }
 .val-rim use, .val-depth use { fill: none; }
 .val-rim circle, .val-depth circle { stroke: none; }
 .logo-banner svg { max-height: 100%; }
-.intro { min-height: 420px; }
+.intro { min-height: var(--hero-height); }
 .val-bed { fill: var(--preview); }
 .val-depth { stroke: #000; stroke-width: 36; stroke-linecap: round; stroke-linejoin: round; fill: #000; }
-.logo-flow, .val-meniscus { transform: translate(600px, 0); }
-.val-meniscus { fill: none; stroke: #ffe5a0; stroke-width: 2.5; opacity: .8; }
+.logo-flow { transform: translate(600px, 0); }
 /* Opaque gold reveals the mold left to right; the filled area stays filled.
    The same edge retreats on the return pass, without a gravity-driven pour. */
 @keyframes val-fill {
@@ -84,9 +83,9 @@ h1 .accent { color: #ffffff; }
     95%, 100% { transform: translate(-25px, 0); }
 }
 @media (prefers-reduced-motion: no-preference) {
-    .logo-flow, .val-meniscus { animation: val-fill 12s ease-in-out infinite; }
+    .logo-flow { animation: val-fill 12s ease-in-out infinite; }
 }
-html[data-page-hidden] :is(.logo-flow, .val-meniscus) { animation-play-state: paused; }
+html[data-page-hidden] :is(.logo-flow) { animation-play-state: paused; }
 .section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; margin-bottom: 24px; }
 h2 { font-size: 15px; font-weight: 600; letter-spacing: -.15px; margin: 0; }
 .project-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
@@ -153,12 +152,12 @@ article.project-card:hover, article.project-card:active { transform: none; box-s
 .site-footer { display: flex; justify-content: space-between; gap: 20px; align-items: center; border-top: 1px solid var(--line); padding: 25px 0; margin-top: 58px; font-size: 11px; color: var(--muted); }
 .site-footer > div { display: flex; align-items: center; gap: 30px; }
 .site-footer a { font-size: 11px; }
-@media (min-width: 1500px) { .intro { min-height: 430px; } }
+@media (min-width: 1500px) { .intro { --hero-height: 430px; } }
 @media (max-width: 760px) {
     .site-shell { padding: 0 24px; }
     .site-header { min-height: 88px; }
     .site-header nav { gap: 20px; }
-    .intro { min-height: 310px; padding: 54px 0; }
+    .intro { --hero-height: 310px; --greeting-top: -24px; padding: 54px 0; }
     h1 { font-size: 36px; letter-spacing: -1.5px; }
     .intro-copy { padding: 24px; }
     .project-grid { gap: 20px; }
@@ -172,7 +171,7 @@ article.project-card:hover, article.project-card:active { transform: none; box-s
     .site-header nav > a { font-size: 12px; }
     .site-header nav > a:first-child { display: none; }
     .wordmark { font-size: 20px; }
-    .intro { min-height: 250px; padding: 40px 0; margin-top: 72px; margin-bottom: 26px; }
+    .intro { --hero-height: 250px; --greeting-top: -16px; padding: 40px 0; margin-top: 72px; margin-bottom: 26px; }
     .intro-copy { width: 100%; padding: 20px 0; }
 
     h1 { font-size: clamp(32px, 8.8vw, 46px); letter-spacing: -1.4px; }
@@ -195,6 +194,12 @@ article.project-card:hover, article.project-card:active { transform: none; box-s
     html[data-pointer-light] .theme-toggle { box-shadow: var(--light-dx) var(--light-dy) 18px var(--shade), var(--light-hx) var(--light-hy) 15px var(--highlight); }
     html[data-pointer-light] .theme-toggle:active { box-shadow: inset var(--light-hx) var(--light-hy) 18px var(--shade), inset var(--light-dx) var(--light-dy) 18px var(--highlight); }
 }
+/* The greeting clears the mold during the first fill, then stays above it. */
+@keyframes val-greeting-rise {
+    0%, 12% { transform: translateY(calc(var(--hero-height) / 2 - 50% - var(--greeting-top))); }
+    90%, 100% { transform: translateY(0); }
+}
+html[data-page-hidden] .intro-copy { animation-play-state: paused; }
 @keyframes settle-in {
     from { opacity: 0; translate: 0 14px; }
     to { opacity: 1; translate: 0 0; }
@@ -204,7 +209,7 @@ article.project-card:hover, article.project-card:active { transform: none; box-s
     50%, 95% { opacity: 0; }
 }
 @media (prefers-reduced-motion: no-preference) {
-    .intro-copy { animation: settle-in .65s cubic-bezier(.2,.7,.2,1) both; }
+    .intro-copy { animation: val-greeting-rise 5.4s cubic-bezier(.4,0,.2,1) both; }
     .project-card { animation: settle-in .65s .16s cubic-bezier(.2,.7,.2,1) backwards; }
     .project-card:nth-child(2) { animation-delay: .24s; }
     .game-word { transition: translate .35s cubic-bezier(.2,.7,.2,1); }

@@ -41,6 +41,18 @@
                             <clipPath id="val-pool">
                                 <path class="logo-flow" d="M0 -100 Q9 -65 0 -30 T0 110 T0 250 T0 390 T0 530 V620 H-1400 V-100Z"/>
                             </clipPath>
+                            <!-- Round the liquid/channel intersection into a soft meniscus. -->
+                            <filter id="val-surface-round" x="-10%" y="-20%" width="120%" height="140%" color-interpolation-filters="sRGB">
+                                <feGaussianBlur stdDeviation="7"/>
+                                <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8.5"/>
+                            </filter>
+                            <mask id="val-rounded-liquid" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="420">
+                                <g filter="url(#val-surface-round)">
+                                    <g mask="url(#val-channel)">
+                                        <rect width="1080" height="420" fill="white" clip-path="url(#val-pool)"/>
+                                    </g>
+                                </g>
+                            </mask>
                             <filter id="val-depth" x="-10%" y="-20%" width="120%" height="140%" color-interpolation-filters="sRGB">
                                 <feComponentTransfer in="SourceAlpha" result="inverse"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
                                 <feGaussianBlur in="inverse" stdDeviation="3" result="blur"/>
@@ -53,10 +65,7 @@
                         <g class="val-rim"><use href="#val-shape"/><circle cx="530" cy="252" r="18"/></g>
                         <g mask="url(#val-channel)">
                             <rect class="val-bed" width="1080" height="420"/>
-                            <g clip-path="url(#val-pool)">
-                                <rect class="val-liquid-body" width="1080" height="420" fill="url(#val-liquid)"/>
-                                <path class="val-meniscus" d="M0 -100 Q9 -65 0 -30 T0 110 T0 250 T0 390 T0 530"/>
-                            </g>
+                            <rect class="val-liquid-body" width="1080" height="420" fill="url(#val-liquid)" mask="url(#val-rounded-liquid)"/>
                         </g>
                         <g class="val-depth" filter="url(#val-depth)"><use href="#val-shape"/><circle cx="530" cy="252" r="18"/></g>
                     </svg>
