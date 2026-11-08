@@ -97,49 +97,80 @@
         if (!document.hidden) measureFill();
     });
     paintFill();
-    // One frame per pointer update; shadows are cast away from the light.
+    // A shallow gravity well pulls each surface gently toward the pointer.
+    const well = document.createElement('div');
+    well.className = 'cursor-well';
+    well.setAttribute('aria-hidden', 'true');
+    document.body.append(well);
     const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
-    const surfaces = [...document.querySelectorAll('.project-card, .logo-banner, .theme-toggle')];
-    let pointer;
+    const surfaces = [...document.querySelectorAll('.project-card, .logo-banner, .intro-copy, .theme-toggle')]
+        .map(element => ({element, x: 0, y: 0, box: null}));
+    let pointer, lastGravityTime = null, geometryDirty = true;
+    let wellX = 0, wellY = 0;
     const reset = () => {
         cancelAnimationFrame(frameRequest);
         frameRequest = 0;
+        lastGravityTime = null;
         pointer = undefined;
-        root.removeAttribute('data-pointer-light');
+        geometryDirty = true;
+        root.removeAttribute('data-pointer-gravity');
         for (const surface of surfaces) {
-            for (const name of ['--light-dx', '--light-dy', '--light-hx', '--light-hy']) surface.style.removeProperty(name);
+            surface.x = surface.y = 0;
+            surface.element.style.removeProperty('--gravity-x');
+            surface.element.style.removeProperty('--gravity-y');
         }
     };
-    function paintLight() {
+    function paintGravity(time) {
         frameRequest = 0;
         if (!pointer) return;
-        root.dataset.pointerLight = '';
-        root.style.setProperty('--light-x', `${pointer.x}px`);
-        root.style.setProperty('--light-y', `${pointer.y}px`);
-        for (const surface of surfaces) {
-            const box = surface.getBoundingClientRect();
-            const dx = (box.left + box.width / 2 - pointer.x) / 36;
-            const dy = (box.top + box.height / 2 - pointer.y) / 36;
-            const distance = Math.hypot(dx, dy);
-            const scale = 10 / Math.max(10, distance);
-            surface.style.setProperty('--light-dx', `${(dx * scale).toFixed(2)}px`);
-            surface.style.setProperty('--light-dy', `${(dy * scale).toFixed(2)}px`);
-            surface.style.setProperty('--light-hx', `${(-dx * scale).toFixed(2)}px`);
-            surface.style.setProperty('--light-hy', `${(-dy * scale).toFixed(2)}px`);
+        const dt = lastGravityTime === null ? 16 : Math.min(50, time - lastGravityTime);
+        lastGravityTime = time;
+        const ease = 1 - Math.exp(-dt / 145);
+        wellX += (pointer.x - wellX) * ease;
+        wellY += (pointer.y - wellY) * ease;
+        well.style.transform = `translate3d(${wellX - 56}px, ${wellY - 56}px, 0)`;
+        // Read geometry only on input/scroll, before writing any surface offsets.
+        if (geometryDirty) {
+            for (const surface of surfaces) {
+                const box = surface.element.getBoundingClientRect();
+                surface.box = {x: box.x + box.width / 2 - surface.x, y: box.y + box.height / 2 - surface.y};
+            }
+            geometryDirty = false;
         }
+        let moving = Math.hypot(pointer.x - wellX, pointer.y - wellY) > 0.05;
+        for (const surface of surfaces) {
+            const dx = pointer.x - surface.box.x, dy = pointer.y - surface.box.y;
+            const distance = Math.hypot(dx, dy);
+            // Smooth bounded attraction, strongest near the well; never chase
+            // the translated position or displace a click target substantially.
+            const force = 12 * Math.exp(-distance / 650) / Math.max(90, distance);
+            const x = dx * force, y = dy * force;
+            surface.x += (x - surface.x) * ease;
+            surface.y += (y - surface.y) * ease;
+            moving ||= Math.hypot(x - surface.x, y - surface.y) > 0.015;
+            surface.element.style.setProperty('--gravity-x', `${surface.x.toFixed(3)}px`);
+            surface.element.style.setProperty('--gravity-y', `${surface.y.toFixed(3)}px`);
+        }
+        if (moving) frameRequest = requestAnimationFrame(paintGravity);
+        else lastGravityTime = null;
     }
-    function scheduleLight() {
-        if (pointer && !frameRequest) frameRequest = requestAnimationFrame(paintLight);
+    function scheduleGravity() {
+        if (pointer && !frameRequest) frameRequest = requestAnimationFrame(paintGravity);
     }
     document.addEventListener('pointermove', event => {
         if (event.pointerType !== 'mouse' || reducedMotion.matches || !finePointer.matches) return;
+        if (!pointer) { wellX = event.clientX; wellY = event.clientY; }
         pointer = {x: event.clientX, y: event.clientY};
-        scheduleLight();
+        root.dataset.pointerGravity = '';
+        geometryDirty = true;
+        scheduleGravity();
     }, {passive: true});
     document.documentElement.addEventListener('pointerleave', reset);
     window.addEventListener('blur', reset);
-    window.addEventListener('scroll', scheduleLight, {passive: true});
-    window.addEventListener('resize', scheduleLight, {passive: true});
+    const refreshGravity = () => { geometryDirty = true; scheduleGravity(); };
+    window.addEventListener('scroll', refreshGravity, {passive: true});
+    window.addEventListener('resize', refreshGravity, {passive: true});
+    document.addEventListener('animationend', refreshGravity);
     document.addEventListener('visibilitychange', () => { if (document.hidden) reset(); });
     reducedMotion.addEventListener('change', reset);
     finePointer.addEventListener('change', reset);

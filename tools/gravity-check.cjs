@@ -1,0 +1,40 @@
+const {chromium} = require('playwright');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const base = process.env.PREVIEW_URL || 'http://100.64.0.15:8788';
+const out = process.env.ARTIFACT_DIR || '/root/valorance-gravity-check';
+(async () => {
+ const browser = await chromium.launch({headless:true});
+ const page = await browser.newPage({viewport:{width:1440,height:1000},colorScheme:'dark'});
+ const errors=[]; page.on('pageerror',e=>errors.push(e.message));
+ let checks=0; const check=(v)=>{assert.ok(v);checks++};
+ await page.goto(base); await page.waitForTimeout(1400);
+ const positions = () => page.locator('.project-card, .logo-banner, .intro-copy, .theme-toggle').evaluateAll(es=>es.map(e=>({x:parseFloat(e.style.getPropertyValue('--gravity-x')),y:parseFloat(e.style.getPropertyValue('--gravity-y'))})));
+ for(const theme of ['dark','light']) {
+  await page.evaluate(t=>document.documentElement.dataset.theme=t,theme);
+  await page.mouse.move(720,610); await page.waitForTimeout(1600);
+  check((await positions()).every(p=>Number.isFinite(p.x)&&Math.hypot(p.x,p.y)<12));
+  check(await page.locator('.cursor-well').isVisible());
+  const before=await positions(); await page.waitForTimeout(600); const after=await positions();
+  check(after.every((p,i)=>Math.hypot(p.x-before[i].x,p.y-before[i].y)<0.04));
+  await page.screenshot({path:`${out}/gravity-${theme}.png`});
+ }
+ await page.mouse.move(710,610);
+ await page.evaluate(()=>scrollTo({top:400,behavior:'instant'})); await page.waitForTimeout(1800);
+ check((await positions()).every(p=>Number.isFinite(p.y)&&Math.hypot(p.x,p.y)<12));
+ check(await page.locator('.theme-toggle').evaluate(e=>{const b=e.getBoundingClientRect();return b.bottom<innerHeight&&b.left>0}));
+ await page.emulateMedia({reducedMotion:'reduce'}); await page.waitForTimeout(50);
+ check(await page.locator('.cursor-well').isHidden());
+ check(await page.locator('.project-card').evaluateAll(es=>es.every(e=>!e.style.getPropertyValue('--gravity-x'))));
+ const touch=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ const mobile=await touch.newPage(); await mobile.goto(base); await mobile.touchscreen.tap(180,370);
+ check(await mobile.locator('.cursor-well').isHidden());
+ check(await mobile.locator('html').getAttribute('data-pointer-gravity')===null);
+ check(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await mobile.waitForTimeout(1400);
+ await mobile.evaluate(()=>Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))));
+ await mobile.screenshot({path:`${out}/gravity-touch.png`,fullPage:true});
+ check(errors.length===0);
+ fs.writeFileSync(`${out}/gravity-results.json`,JSON.stringify({passed:checks,errors}));
+ console.log(JSON.stringify({passed:checks,errors})); await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});
