@@ -146,6 +146,39 @@
         const path = list => `M${list.map(p => p.map(n => n.toFixed(1)).join(',')).join('L')}Z`;
         return path(outline)+path(points);
     }
+    // Direct illumination is visibility, not another long cast-shadow wedge.
+    // Trace a small broad source through the scene; retain ambient light in shade.
+    function lightVisibility(surface, box, bounds) {
+        const blockers = casters.filter(e => e !== surface && !e.contains(surface));
+        let visible = 0, rays = 0;
+        for (const fy of [.2, .5, .8]) {
+            const target = {x: box.left + box.width / 2, y: box.top + box.height * fy};
+            for (const [ox, oy] of [[0,0],[-12,0],[12,0],[0,-12],[0,12]]) {
+                const source = {x: pointer.x + ox, y: pointer.y + oy};
+                const blocked = blockers.some(element => {
+                    const b = bounds.get(element);
+                    // A pointer over a surface doesn't turn that surface into a lamp.
+                    if (source.x > b.left && source.x < b.right && source.y > b.top && source.y < b.bottom) return false;
+                    let near = 0, far = 1;
+                    for (const [start, delta, min, max] of [
+                        [source.x, target.x-source.x, b.left+3, b.right-3],
+                        [source.y, target.y-source.y, b.top+3, b.bottom-3]
+                    ]) {
+                        if (Math.abs(delta) < .001) { if (start < min || start > max) return false; }
+                        else {
+                            const t1 = (min-start)/delta, t2 = (max-start)/delta;
+                            near = Math.max(near, Math.min(t1,t2));
+                            far = Math.min(far, Math.max(t1,t2));
+                        }
+                    }
+                    return far > near && far > .001 && near < .999;
+                });
+                visible += blocked ? 0 : 1;
+                rays++;
+            }
+        }
+        return visible/rays;
+    }
     // One frame per pointer update; shadows are cast away from the light.
     const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
     const surfaces = [...document.querySelectorAll('.project-card, .project-preview, .intro-copy, .logo-banner, .theme-toggle')];
@@ -159,7 +192,7 @@
         offset.setAttribute('dx', '3');
         offset.setAttribute('dy', '4');
         for (const surface of surfaces) {
-            for (const name of ['--light-dx', '--light-dy', '--light-hx', '--light-hy']) surface.style.removeProperty(name);
+            for (const name of ['--light-dx', '--light-dy', '--light-hx', '--light-hy', '--light-visible', '--light-direct', '--light-shade']) surface.style.removeProperty(name);
         }
     };
     function paintLight() {
@@ -175,6 +208,10 @@
         });
         for (const surface of surfaces) {
             const box = bounds.get(surface);
+            const visibility = lightVisibility(surface, box, bounds);
+            surface.style.setProperty('--light-visible', visibility.toFixed(3));
+            surface.style.setProperty('--light-direct', `${(visibility * 100).toFixed(1)}%`);
+            surface.style.setProperty('--light-shade', ((1-visibility)*.10).toFixed(3));
             const dx = (box.left + box.width / 2 - pointer.x) / 36;
             const dy = (box.top + box.height / 2 - pointer.y) / 36;
             const distance = Math.hypot(dx, dy);

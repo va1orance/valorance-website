@@ -191,8 +191,12 @@ article.project-card:hover, article.project-card:active { transform: none; box-s
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
     html[data-pointer-light] .scene-shadows { display: block; }
     html[data-pointer-light] .project-card,
-    html[data-pointer-light] .theme-toggle { box-shadow: var(--light-dx) var(--light-dy) 22px var(--shade), var(--light-hx) var(--light-hy) 18px var(--highlight); }
-    html[data-pointer-light] .project-preview { box-shadow: inset var(--light-hx) var(--light-hy) 18px var(--shade), inset var(--light-dx) var(--light-dy) 14px var(--highlight); }
+    html[data-pointer-light] .theme-toggle { --direct-highlight: color-mix(in srgb, var(--highlight) var(--light-direct, 100%), var(--surface)); box-shadow: var(--light-dx) var(--light-dy) 22px var(--shade), var(--light-hx) var(--light-hy) 18px var(--direct-highlight); }
+    html[data-pointer-light] .project-card { background: color-mix(in srgb, var(--surface) calc(100% - var(--light-shade, 0) * 100%), #000); }
+    html[data-pointer-light] .project-preview { --direct-highlight: color-mix(in srgb, var(--highlight) var(--light-direct, 100%), var(--preview)); box-shadow: inset var(--light-hx) var(--light-hy) 18px var(--shade), inset var(--light-dx) var(--light-dy) 14px var(--direct-highlight); }
+    /* Above artwork, so image pixels cannot cover the recessed well's rim. */
+    html[data-pointer-light] .project-preview::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 2; background: rgb(0 0 0 / var(--light-shade, 0)); box-shadow: inset calc(var(--light-hx) * 1.5) calc(var(--light-hy) * 1.5) 24px color-mix(in srgb, var(--shade) 85%, transparent), inset var(--light-dx) var(--light-dy) 18px color-mix(in srgb, var(--direct-highlight) 65%, transparent); }
+    html[data-pointer-light] .night-preview img { filter: drop-shadow(calc(var(--light-dx) * .65) calc(var(--light-dy) * .65) 4px rgb(0 0 0 / .28)); }
     html[data-pointer-light] .intro-copy h1 { text-shadow: calc(var(--light-dx) * .18) calc(var(--light-dy) * .18) 2px var(--shade); }
     html[data-pointer-light] .val-rim { transform: translate(calc(var(--light-dx) * .12), calc(var(--light-dy) * .12)); }
     html[data-pointer-light] .theme-toggle:active { box-shadow: inset var(--light-hx) var(--light-hy) 9px var(--shade), inset var(--light-dx) var(--light-dy) 7px var(--highlight); }
