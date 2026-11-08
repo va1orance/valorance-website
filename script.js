@@ -113,8 +113,8 @@
         return path;
     });
     document.body.append(shadowScene);
-    // Convex silhouette of a rounded face and its perspective projection.
-    // Subtract only the caster itself: other cards must remain receivers.
+    // Shallow relief under a broad, elevated source: shadows stay on the
+    // page plane, with bounded XY travel rather than towering projections.
     function castShadow(box, radius, light) {
         const points = [];
         for (const [cx, cy, start] of [
@@ -128,7 +128,10 @@
                 points.push([cx+radius*Math.cos(angle), cy+radius*Math.sin(angle)]);
             }
         }
-        const projected = points.map(([x,y]) => [x+(x-light.x)*3.5, y+(y-light.y)*3.5]);
+        const dx = box.left + box.width/2 - light.x;
+        const dy = box.top + box.height/2 - light.y;
+        const scale = 10 / Math.max(360, Math.hypot(dx, dy));
+        const projected = points.map(([x,y]) => [x + dx*scale, y + dy*scale]);
         const sorted = [...points, ...projected].sort((a,b) => a[0]-b[0] || a[1]-b[1]);
         const cross = (o,a,b) => (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
         const half = list => {
@@ -175,7 +178,7 @@
             const dx = (box.left + box.width / 2 - pointer.x) / 36;
             const dy = (box.top + box.height / 2 - pointer.y) / 36;
             const distance = Math.hypot(dx, dy);
-            const scale = 17 / Math.max(17, distance);
+            const scale = 6 / Math.max(12, distance);
             surface.style.setProperty('--light-dx', `${(dx * scale).toFixed(2)}px`);
             surface.style.setProperty('--light-dy', `${(dy * scale).toFixed(2)}px`);
             surface.style.setProperty('--light-hx', `${(-dx * scale).toFixed(2)}px`);
