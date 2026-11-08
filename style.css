@@ -85,6 +85,10 @@ h2 { font-size: 15px; font-weight: 600; letter-spacing: -.15px; margin: 0; }
 .project-card:hover { transform: translateY(-4px); box-shadow: 9px 12px 22px var(--shade), -5px -5px 15px var(--highlight); }
 .project-card:active { transform: translateY(-1px); }
 .project-preview { position: relative; display: grid; place-items: center; aspect-ratio: 2.15; overflow: hidden; background: var(--preview); border-radius: 12px; }
+.website-capture, .website-capture img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.website-capture .capture-light { display: none; }
+[data-theme="light"] .website-capture .capture-dark { display: none; }
+[data-theme="light"] .website-capture .capture-light { display: block; }
 .night-preview img { display: block; width: 86%; height: auto; max-height: 65%; object-fit: contain; margin-top: 18px; }
 .project-details { padding: 25px 16px 14px; flex: 1; display: flex; flex-direction: column; }
 .project-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }

@@ -1,0 +1,6 @@
+Website banner captures
+
+TritonLog: captured from the actual private website preview in its native dark and light themes, using its theme toggle so the app screenshots match. The public /tritionlog destination returned HTTP 404; its existing card link was preserved.
+Learneth: captured from https://valorance.net/learneth/ in its native theme.
+
+Browser viewport: 1920 x 893 CSS pixels, device scale 1. Screenshots are unmodified browser captures. Existing card dimensions, descriptions, ordering and links are unchanged.
