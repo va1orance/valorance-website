@@ -184,11 +184,11 @@ article.project-card:hover, article.project-card:active { transform: none; box-s
 }
 /* Breathing room above the hero and below the floating theme control. */
 .site-shell { padding-top: clamp(40px, 6vw, 88px); padding-bottom: 96px; }
-/* A shallow depression in the surface, not a spotlight. */
-.cursor-well { display: none; position: fixed; top: 0; left: 0; width: 112px; height: 112px; border-radius: 50%; pointer-events: none; z-index: 3; }
+/* A soft moving light, with raised and inset shadows facing opposite ways. */
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-    html[data-pointer-gravity] .cursor-well { display: block; background: radial-gradient(circle, rgba(0,0,0,.045), transparent 70%); box-shadow: inset 7px 7px 16px -7px var(--shade), inset -7px -7px 16px -7px var(--highlight); }
-    .project-card, .logo-banner, .intro-copy, .theme-toggle { translate: var(--gravity-x, 0px) var(--gravity-y, 0px); }
+    html[data-pointer-light] .project-card,
+    html[data-pointer-light] .theme-toggle { box-shadow: var(--light-dx) var(--light-dy) 18px var(--shade), var(--light-hx) var(--light-hy) 15px var(--highlight); }
+    html[data-pointer-light] .theme-toggle:active { box-shadow: inset var(--light-hx) var(--light-hy) 18px var(--shade), inset var(--light-dx) var(--light-dy) 18px var(--highlight); }
 }
 /* The greeting clears the mold during the first fill, then stays above it. */
 @keyframes val-greeting-rise {
