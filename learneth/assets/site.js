@@ -39,5 +39,73 @@ reset.addEventListener("click", () => {
   answer.focus();
 });
 
-// Decorative word changes never interrupt screen readers or reduced-motion users.
-(()=>{const word=document.querySelector('.rotating-word');if(!word)return;const motion=matchMedia('(prefers-reduced-motion: reduce)');const words=['textbooks','documents','notes','learning'];let index=0;setInterval(()=>{if(motion.matches||document.hidden)return;word.classList.add('switching');setTimeout(()=>{word.textContent=words[index=(index+1)%words.length];word.classList.remove('switching')},220)},2600)})();
+// Decorative typing is hidden from assistive technology; the full phrase stays readable.
+(() => {
+  const word = document.querySelector('.type-text');
+  if (!word) return;
+  const motion = matchMedia('(prefers-reduced-motion: reduce)');
+  const words = ['textbooks', 'documents', 'notes', 'learning'];
+  let index = 0, deleting = true, timer;
+  function tick() {
+    if (motion.matches) return;
+    if (document.hidden) { timer = setTimeout(tick, 300); return; }
+    const current = word.textContent;
+    word.textContent = deleting ? current.slice(0, -1) : words[index].slice(0, current.length + 1);
+    let delay = deleting ? 80 : 120;
+    if (deleting && !word.textContent) {
+      deleting = false;
+      index = (index + 1) % words.length;
+      delay = 280;
+    } else if (!deleting && word.textContent === words[index]) {
+      deleting = true;
+      delay = 1700;
+    }
+    timer = setTimeout(tick, delay);
+  }
+  function restart() {
+    clearTimeout(timer);
+    index = 0;
+    deleting = true;
+    word.textContent = words[0];
+    if (!motion.matches) timer = setTimeout(tick, 1700);
+  }
+  motion.addEventListener('change', restart);
+  restart();
+})();
+
+// Enlarge the same document, never a second copy with duplicate controls or state.
+(() => {
+  const dialog = document.querySelector('#example-fullscreen');
+  const workspace = document.querySelector('#preview .workspace');
+  const open = document.querySelector('#example-open');
+  const close = document.querySelector('#example-close');
+  if (!dialog || !workspace || !open || !close) return;
+  const marker = document.createComment('Embedded example position');
+  workspace.before(marker);
+  let returnFocus = open;
+  function showExample() {
+    if (dialog.open) return;
+    returnFocus = document.activeElement === document.body ? open : document.activeElement;
+    dialog.append(workspace);
+    dialog.showModal();
+    document.documentElement.classList.add('example-is-open');
+  }
+  open.hidden = false;
+  open.addEventListener('click', showExample);
+  close.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('close', () => {
+    marker.after(workspace);
+    document.documentElement.classList.remove('example-is-open');
+    const url = new URL(location.href);
+    if (url.searchParams.get('example') === 'fullscreen') url.searchParams.delete('example');
+    if (url.hash === '#example-fullscreen') url.hash = 'preview';
+    history.replaceState(history.state, '', url);
+    returnFocus.focus({preventScroll:true});
+  });
+  function openFromLocation() {
+    if (new URLSearchParams(location.search).get('example') === 'fullscreen' || location.hash === '#example-fullscreen') showExample();
+  }
+  window.addEventListener('hashchange', openFromLocation);
+  window.addEventListener('popstate', openFromLocation);
+  openFromLocation();
+})();
