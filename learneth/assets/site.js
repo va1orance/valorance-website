@@ -38,3 +38,6 @@ reset.addEventListener("click", () => {
   answer.value = "";
   answer.focus();
 });
+
+// Decorative word changes never interrupt screen readers or reduced-motion users.
+(()=>{const word=document.querySelector('.rotating-word');if(!word)return;const motion=matchMedia('(prefers-reduced-motion: reduce)');const words=['textbooks','documents','notes','learning'];let index=0;setInterval(()=>{if(motion.matches||document.hidden)return;word.classList.add('switching');setTimeout(()=>{word.textContent=words[index=(index+1)%words.length];word.classList.remove('switching')},220)},2600)})();
