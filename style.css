@@ -184,11 +184,18 @@ article.project-card:hover, article.project-card:active { transform: none; box-s
 }
 /* Breathing room above the hero and below the floating theme control. */
 .site-shell { padding-top: clamp(40px, 6vw, 88px); padding-bottom: 96px; }
-/* A soft moving light, with raised and inset shadows facing opposite ways. */
+/* One invisible point source, with shared shadows above all receivers.
+   Group opacity prevents overlapping silhouettes becoming opaque black. */
+.scene-shadows { display: none; position: fixed; inset: 0; width: 100%; height: 100%; z-index: 6; pointer-events: none; fill: #000; opacity: .32; filter: blur(1.2px); }
+[data-theme="light"] .scene-shadows { opacity: .22; }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    html[data-pointer-light] .scene-shadows { display: block; }
     html[data-pointer-light] .project-card,
-    html[data-pointer-light] .theme-toggle { box-shadow: var(--light-dx) var(--light-dy) 18px var(--shade), var(--light-hx) var(--light-hy) 15px var(--highlight); }
-    html[data-pointer-light] .theme-toggle:active { box-shadow: inset var(--light-hx) var(--light-hy) 18px var(--shade), inset var(--light-dx) var(--light-dy) 18px var(--highlight); }
+    html[data-pointer-light] .theme-toggle { box-shadow: var(--light-dx) var(--light-dy) 9px color-mix(in srgb, var(--shade) 78%, #000), var(--light-hx) var(--light-hy) 7px var(--highlight); }
+    html[data-pointer-light] .project-preview { box-shadow: inset var(--light-hx) var(--light-hy) 12px color-mix(in srgb, var(--shade) 80%, #000), inset var(--light-dx) var(--light-dy) 8px var(--highlight); }
+    html[data-pointer-light] .intro-copy h1 { text-shadow: calc(var(--light-dx) * .18) calc(var(--light-dy) * .18) 2px var(--shade); }
+    html[data-pointer-light] .val-rim { transform: translate(calc(var(--light-dx) * .12), calc(var(--light-dy) * .12)); }
+    html[data-pointer-light] .theme-toggle:active { box-shadow: inset var(--light-hx) var(--light-hy) 9px var(--shade), inset var(--light-dx) var(--light-dy) 7px var(--highlight); }
 }
 /* The greeting clears the mold during the first fill, then stays above it. */
 @keyframes val-greeting-rise {

@@ -97,15 +97,64 @@
         if (!document.hidden) measureFill();
     });
     paintFill();
+    // A shared receiver layer makes every surface, image and glyph receive
+    // the same cast shadows, rather than lighting each card in isolation.
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const shadowScene = document.createElementNS(svgNS, 'svg');
+    shadowScene.classList.add('scene-shadows');
+    shadowScene.setAttribute('aria-hidden', 'true');
+    shadowScene.setAttribute('focusable', 'false');
+    const casters = [...document.querySelectorAll('.project-card, .theme-toggle')];
+    const shadowPaths = casters.map(element => {
+        const path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('fill-rule', 'evenodd');
+        path.classList.add(element.matches('.project-card') ? 'card-shadow' : 'control-shadow');
+        shadowScene.append(path);
+        return path;
+    });
+    document.body.append(shadowScene);
+    // Convex silhouette of a rounded face and its perspective projection.
+    // Subtract only the caster itself: other cards must remain receivers.
+    function castShadow(box, radius, light) {
+        const points = [];
+        for (const [cx, cy, start] of [
+            [box.right-radius, box.top+radius, -90],
+            [box.right-radius, box.bottom-radius, 0],
+            [box.left+radius, box.bottom-radius, 90],
+            [box.left+radius, box.top+radius, 180]
+        ]) {
+            for (let i=0; i<=6; i++) {
+                const angle = (start+i*15)*Math.PI/180;
+                points.push([cx+radius*Math.cos(angle), cy+radius*Math.sin(angle)]);
+            }
+        }
+        const projected = points.map(([x,y]) => [x+(x-light.x)*3.5, y+(y-light.y)*3.5]);
+        const sorted = [...points, ...projected].sort((a,b) => a[0]-b[0] || a[1]-b[1]);
+        const cross = (o,a,b) => (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+        const half = list => {
+            const hull = [];
+            for (const point of list) {
+                while (hull.length>1 && cross(hull[hull.length-2],hull[hull.length-1],point)<=0) hull.pop();
+                hull.push(point);
+            }
+            return hull.slice(0,-1);
+        };
+        const outline = [...half(sorted), ...half([...sorted].reverse())];
+        const path = list => `M${list.map(p => p.map(n => n.toFixed(1)).join(',')).join('L')}Z`;
+        return path(outline)+path(points);
+    }
     // One frame per pointer update; shadows are cast away from the light.
     const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
-    const surfaces = [...document.querySelectorAll('.project-card, .logo-banner, .theme-toggle')];
+    const surfaces = [...document.querySelectorAll('.project-card, .project-preview, .intro-copy, .logo-banner, .theme-toggle')];
     let pointer;
     const reset = () => {
         cancelAnimationFrame(frameRequest);
         frameRequest = 0;
         pointer = undefined;
         root.removeAttribute('data-pointer-light');
+        const offset = document.querySelector('#val-depth feOffset');
+        offset.setAttribute('dx', '3');
+        offset.setAttribute('dy', '4');
         for (const surface of surfaces) {
             for (const name of ['--light-dx', '--light-dy', '--light-hx', '--light-hy']) surface.style.removeProperty(name);
         }
@@ -114,17 +163,30 @@
         frameRequest = 0;
         if (!pointer) return;
         root.dataset.pointerLight = '';
+        shadowScene.setAttribute('viewBox', `0 0 ${innerWidth} ${innerHeight}`);
+        // Read all bounds before writing styles; no per-surface layout flushes.
+        const bounds = new Map(surfaces.map(element => [element, element.getBoundingClientRect()]));
+        casters.forEach((element, i) => {
+            const box = bounds.get(element);
+            shadowPaths[i].setAttribute('d', castShadow(box, element.matches('.theme-toggle') ? box.width/2 : 22, pointer));
+        });
         for (const surface of surfaces) {
-            const box = surface.getBoundingClientRect();
+            const box = bounds.get(surface);
             const dx = (box.left + box.width / 2 - pointer.x) / 36;
             const dy = (box.top + box.height / 2 - pointer.y) / 36;
             const distance = Math.hypot(dx, dy);
-            const scale = 10 / Math.max(10, distance);
+            const scale = 17 / Math.max(17, distance);
             surface.style.setProperty('--light-dx', `${(dx * scale).toFixed(2)}px`);
             surface.style.setProperty('--light-dy', `${(dy * scale).toFixed(2)}px`);
             surface.style.setProperty('--light-hx', `${(-dx * scale).toFixed(2)}px`);
             surface.style.setProperty('--light-hy', `${(-dy * scale).toFixed(2)}px`);
         }
+        const logo = document.querySelector('.logo-banner');
+        const dx = parseFloat(logo.style.getPropertyValue('--light-dx'));
+        const dy = parseFloat(logo.style.getPropertyValue('--light-dy'));
+        const offset = document.querySelector('#val-depth feOffset');
+        offset.setAttribute('dx', (-dx * .55).toFixed(2));
+        offset.setAttribute('dy', (-dy * .55).toFixed(2));
     }
     function scheduleLight() {
         if (pointer && !frameRequest) frameRequest = requestAnimationFrame(paintLight);

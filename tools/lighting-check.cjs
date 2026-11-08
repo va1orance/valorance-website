@@ -1,0 +1,42 @@
+const {chromium} = require('playwright');
+const assert = require('node:assert/strict');
+(async () => {
+ const browser = await chromium.launch();
+ const page = await browser.newPage({viewport:{width:1440,height:1600}});
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(process.env.PREVIEW_URL || 'http://100.64.0.15:8788/');
+ await page.waitForTimeout(1400);
+ const boxes = await page.locator('.project-card').evaluateAll(es => es.map(e => {const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
+ const a=boxes[0], b=boxes[3];
+ let checks=0;
+ for (const theme of ['dark','light']) {
+  await page.evaluate(t=>document.documentElement.dataset.theme=t,theme);
+  await page.mouse.move(b.x+b.w+35,b.y+b.h+35);await page.waitForTimeout(100);
+  assert.equal(await page.locator('.scene-shadows').count(),1);checks++;
+  const path=page.locator('.scene-shadows .card-shadow').nth(3);
+  assert.ok(await path.evaluate((p,point)=>p.isPointInFill(new DOMPoint(point.x,point.y)),{x:a.x+a.w/2,y:a.y+a.h/2}),'bottom-right card shadows diagonal top-left');checks++;
+  assert.equal(await path.evaluate((p,point)=>p.isPointInFill(new DOMPoint(point.x,point.y)),{x:b.x+b.w/2,y:b.y+b.h/2}),false,'caster excludes its own face');checks++;
+  await page.screenshot({path:`/tmp/valorance-occlusion-${theme}.png`});
+  const old=await path.getAttribute('d');
+  await page.mouse.move(20,20);await page.waitForTimeout(100);
+  assert.notEqual(await path.getAttribute('d'),old);checks++;
+  await page.setViewportSize({width:1440,height:1000});
+  await page.mouse.move(20,40);await page.waitForTimeout(100);
+  const beforeScroll=await path.getAttribute('d');
+  await page.evaluate(()=>scrollTo(0,200));await page.waitForTimeout(100);
+  assert.notEqual(await path.getAttribute('d'),beforeScroll);checks++;
+  await page.evaluate(()=>scrollTo(0,0));
+  await page.setViewportSize({width:1440,height:1600});await page.waitForTimeout(100);
+ }
+ await page.evaluate(()=>document.documentElement.dispatchEvent(new PointerEvent('pointerleave')));
+ assert.equal(await page.locator('.scene-shadows').evaluate(e=>getComputedStyle(e).display),'none');checks++;
+ await page.emulateMedia({reducedMotion:'reduce'});await page.mouse.move(400,400);
+ assert.equal(await page.locator('.scene-shadows').evaluate(e=>getComputedStyle(e).display),'none');checks++;
+ const touch=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ await touch.goto(process.env.PREVIEW_URL || 'http://100.64.0.15:8788/');
+ await touch.touchscreen.tap(200,300);
+ assert.equal(await touch.locator('.scene-shadows').evaluate(e=>getComputedStyle(e).display),'none');checks++;
+ assert.deepEqual(errors,[]);checks++;
+ console.log(`${checks} global lighting checks passed`);
+ await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});
