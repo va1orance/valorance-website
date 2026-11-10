@@ -1,0 +1,22 @@
+License history — Typetris
+
+The Typetris License applies to project-owned material from the commit
+introducing this file onward. It does not revoke rights already granted
+under earlier licenses or relicense third-party material.
+
+The preceding repository snapshot did not contain a project-wide LICENSE.
+Third-party dependencies and any separately licensed material retain their
+original copyright notices and license terms. This license does not grant
+rights to third-party material beyond those original terms.
+
+License provenance
+
+The Typetris License is adapted from the Open WebUI License at:
+https://github.com/open-webui/open-webui/blob/b0e6098e940942281d9c83f3529ea117287a3a22/LICENSE
+
+The project name, protected branding, and copyright holder were changed.
+The reference to Open WebUI's contributor license agreement was omitted:
+this repository does not have that agreement, and this license does not
+claim a contributor copyright assignment or relicensing permission.
+The redistribution conditions, branding exceptions (including the fifty
+end-user / rolling thirty-day exception), and disclaimer are unchanged.

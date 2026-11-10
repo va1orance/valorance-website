@@ -476,9 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- EVENT LISTENERS ---
     howToPlayToggle.addEventListener('click', () => {
-        const hidden = howToPlayContent.classList.toggle('hidden');
-        howToPlayToggle.setAttribute('aria-expanded', String(!hidden));
-        howToPlayToggle.textContent = hidden ? 'How to Play ▼' : 'How to Play ▲';
+        howToPlayContent.classList.toggle('hidden');
     });
 
     playerInput.addEventListener('keydown', (e) => {
