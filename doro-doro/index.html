@@ -1,19 +1,20 @@
 <!doctype html>
 <html lang="en" data-theme="light">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#e9e6dc"><meta name="description" content="Doro-doro. A sculptural space for uninterrupted time. An architectural Pomodoro timer."><title>Doro-doro — a space for time</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#e9e6dc"><meta name="description" content="ドロドロ. A sculptural space for uninterrupted time. An architectural Pomodoro timer."><title>ドロドロ — a space for time</title>
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-<script>try{document.documentElement.dataset.theme=localStorage.getItem('doro-theme')==='dark'?'dark':'light'}catch{}</script>
+<script>try{document.documentElement.dataset.theme=['light','dark','catppuccin','latte','sunset','nord','dracula'].includes(localStorage.getItem('doro-theme'))?localStorage.getItem('doro-theme'):'light'}catch{}</script>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <main class="sheet">
-<header class="masthead"><a class="wordmark" href="./" aria-label="Doro-doro home">doro<span class="wordmark-dash">—</span>doro</a><button class="icon-button" id="settings-open" aria-label="Timer settings" title="Timer settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6"/></svg></button></header>
-<section class="art" aria-label="Interactive architectural sculpture. Its layers respond to the timer and your pointer.">
-<div class="art-heading"><span>A SPACE<br>FOR TIME.</span><span class="plate-number">№ 001<br><i id="art-mode">FOCUS STUDY</i></span></div>
+<header class="masthead"><a class="wordmark" href="./" aria-label="ドロドロ home" lang="ja">ドロドロ</a><button class="icon-button" id="settings-open" aria-label="Timer settings" title="Timer settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6"/></svg></button></header>
+<section class="art" aria-label="Interactive architectural model. Structural pieces assemble with the timer and respond to your pointer.">
+<div class="art-heading"><div class="building-heading"><label for="building" class="sr-only">Building</label><select id="building"></select><span id="building-city">Shanghai</span></div><span class="plate-number"><span id="plate-number">№ 001</span><br><i id="art-mode">FOCUS STUDY</i></span></div>
 <canvas id="architecture" aria-hidden="true"></canvas>
 <div class="art-axis" aria-hidden="true"><span>Y</span><span>+</span><span>0</span></div>
-<div class="art-caption"><span id="sculpture-label">FIG. 01 &nbsp; / &nbsp; ACCUMULATION</span><span class="live-indicator"><i></i><span id="drawing-state">AT REST</span></span></div>
+<div class="art-caption"><span class="assembly-meta"><span id="sculpture-label">RADIAL FACETS</span><span id="assembly-count">000 / 1516</span></span><span class="live-indicator"><i></i><span id="drawing-state">AT REST</span></span></div>
+<button id="preview" class="preview-button" aria-label="Preview assembly">Preview <span aria-hidden="true">↗</span></button>
 </section>
 <section class="instrument" aria-label="Pomodoro timer">
 <div class="eyebrow"><span class="session-label">INTERVAL <span id="interval">01</span></span><span id="phase-label">25 MIN / FOCUS</span></div>
@@ -23,7 +24,7 @@
 <div class="session-bottom"><div class="session-progress"><span class="session-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><strong id="completed">00</strong> COMPLETE</span></div><button class="sound-button" id="sound" aria-label="Enable completion sound" aria-pressed="false">SOUND <span id="sound-state">OFF</span></button></div>
 <div class="timeline" aria-hidden="true"><div id="timeline-fill"></div></div>
 </section>
-<footer><button class="theme-button" id="theme" aria-label="Switch to dark theme"><span class="theme-symbol"></span><span id="theme-name">PAPER</span></button><span class="footer-center">TIME, GIVEN FORM.</span><button class="fullscreen" id="fullscreen" aria-label="Enter fullscreen" title="Enter fullscreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m8 0h4v-4"/></svg></button></footer>
+<footer><label class="theme-button"><span class="theme-symbol" aria-hidden="true"></span><span class="sr-only">Color theme</span><select id="theme"><option value="light">Paper</option><option value="dark">After hours</option><option value="catppuccin">Catppuccin</option><option value="latte">Catppuccin Latte</option><option value="sunset">Sunset</option><option value="nord">Nord</option><option value="dracula">Dracula</option></select></label><span class="footer-center">TIME, GIVEN FORM.</span><button class="fullscreen" id="fullscreen" aria-label="Enter fullscreen" title="Enter fullscreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m8 0h4v-4"/></svg></button></footer>
 </main>
 <dialog id="settings"><form id="settings-form"><div class="dialog-heading"><h1>Your rhythm.</h1><button type="button" id="settings-close" class="icon-button" aria-label="Close settings">×</button></div><p>Give each interval its own space.</p><label>Focus <span>MINUTES</span><input name="focus" aria-label="Focus minutes" type="number" min="1" max="180" step="1" required></label><label>Short rest <span>MINUTES</span><input name="short" aria-label="Short rest minutes" type="number" min="1" max="180" step="1" required></label><label>Long rest <span>MINUTES</span><input name="long" aria-label="Long rest minutes" type="number" min="1" max="180" step="1" required></label><p class="settings-note">A long rest follows every fourth completed focus. Each interval starts when you’re ready. Applying changes resets the current timer.</p><button class="start apply" type="submit">Apply settings <span>↗</span></button><div class="keyboard-hint">SPACE · PLAY / PAUSE &nbsp; &nbsp; R · RESET</div></form></dialog>
 <script type="module" src="./app.mjs"></script>
