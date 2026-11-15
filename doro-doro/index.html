@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#e9e6dc"><meta name="description" content="ドロドロ. A sculptural space for uninterrupted time. An architectural Pomodoro timer."><title>ドロドロ — a space for time</title>
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
 <script>try{document.documentElement.dataset.theme=['light','dark','catppuccin','latte','sunset','nord','dracula'].includes(localStorage.getItem('doro-theme'))?localStorage.getItem('doro-theme'):'light'}catch{}</script>
-<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./assets/style-04075d71e954.css">
 </head>
 <body>
 <main class="sheet">
@@ -24,8 +24,8 @@
 <div class="session-bottom"><div class="session-progress"><span class="session-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span><strong id="completed">00</strong> COMPLETE</span></div><button class="sound-button" id="sound" aria-label="Enable completion sound" aria-pressed="false">SOUND <span id="sound-state">OFF</span></button></div>
 <div class="timeline" aria-hidden="true"><div id="timeline-fill"></div></div>
 </section>
-<footer><label class="theme-button"><span class="theme-symbol" aria-hidden="true"></span><span class="sr-only">Color theme</span><select id="theme"><option value="light">Paper</option><option value="dark">After hours</option><option value="catppuccin">Catppuccin</option><option value="latte">Catppuccin Latte</option><option value="sunset">Sunset</option><option value="nord">Nord</option><option value="dracula">Dracula</option></select></label><span class="footer-center">TIME, GIVEN FORM.</span><button class="fullscreen" id="fullscreen" aria-label="Enter fullscreen" title="Enter fullscreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m8 0h4v-4"/></svg></button></footer>
+<footer><div class="theme-button"><span class="theme-symbol" aria-hidden="true"></span><span class="sr-only">Color theme</span><select id="theme" aria-label="Color theme"><option value="light">Paper</option><option value="dark">After hours</option><option value="catppuccin">Catppuccin</option><option value="latte">Catppuccin Latte</option><option value="sunset">Sunset</option><option value="nord">Nord</option><option value="dracula">Dracula</option></select></div><span class="footer-center">TIME, GIVEN FORM.</span><button class="fullscreen" id="fullscreen" aria-label="Enter fullscreen" title="Enter fullscreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m8 0h4v-4"/></svg></button></footer>
 </main>
 <dialog id="settings"><form id="settings-form"><div class="dialog-heading"><h1>Your rhythm.</h1><button type="button" id="settings-close" class="icon-button" aria-label="Close settings">×</button></div><p>Give each interval its own space.</p><label>Focus <span>MINUTES</span><input name="focus" aria-label="Focus minutes" type="number" min="1" max="180" step="1" required></label><label>Short rest <span>MINUTES</span><input name="short" aria-label="Short rest minutes" type="number" min="1" max="180" step="1" required></label><label>Long rest <span>MINUTES</span><input name="long" aria-label="Long rest minutes" type="number" min="1" max="180" step="1" required></label><p class="settings-note">A long rest follows every fourth completed focus. Each interval starts when you’re ready. Applying changes resets the current timer.</p><button class="start apply" type="submit">Apply settings <span>↗</span></button><div class="keyboard-hint">SPACE · PLAY / PAUSE &nbsp; &nbsp; R · RESET</div></form></dialog>
-<script type="module" src="./app.mjs"></script>
+<script type="module" src="./assets/app-XVB2T3X3.js"></script>
 </body></html>
