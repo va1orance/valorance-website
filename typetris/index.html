@@ -1,68 +1,212 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Typetris Competitive</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <h1 id="main-title">Typetris</h1>
-    <div id="how-to-play">
-        <button id="how-to-play-toggle">How to Play ▼</button>
-        <div id="how-to-play-content" class="hidden">
-            <ul>
-                <li>This is currently a proof of concept! Many more features to come...</li>
-                <li>Type words to build combos.</li>
-                <li>Press <strong>Enter</strong> to send your combo as an attack to your opponent.</li>
-                <li>Making a mistake will also send your current combo.</li>
-                <li>Don't let your grid reach the top!</li>
-                <li>Dev notes: The opponent right now is your WPM + base WPM + randomly sending lines.<br /><br />
-                    If you have any feature ideas, DM me on Discord: <strong>val0rance</strong><br /><br />
-                    Attacks currently send exactly your combo (the amount of words you typed correctly consecutively). 
-                    In the future, they will have multipliers.
-                </li>
-            </ul>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#10121b" />
+    <meta
+      name="description"
+      content="A keyboard-first typing arcade. Build combos, launch attacks, and outlast the CPU."
+    />
+    <title>Typetris — Stack. Type. Strike.</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.552b2c4c5db7.css" />
+  </head>
+  <body>
+    <div class="ambient-grid" aria-hidden="true"></div>
+    <header>
+      <a class="brand" href="./" aria-label="Typetris home"
+        ><span class="mini-piece" aria-hidden="true">▟</span> TYPE<span
+          >TRIS</span
+        ></a
+      >
+      <div class="header-right">
+        <span class="online-dot"></span> SINGLE PLAYER
+        <button
+          id="sound-toggle"
+          aria-label="Toggle sound"
+          aria-pressed="false"
+        >
+          SOUND OFF
+        </button>
+      </div>
+    </header>
+    <main>
+      <section id="menu" class="menu-screen">
+        <div class="intro">
+          <div class="eyebrow">THE TYPING ARCADE</div>
+          <h1>TYPE.<br />STACK.<br /><span>STRIKE.</span></h1>
+          <p>
+            Find your rhythm. Build your combo.<br />Send the whole stack
+            flying.
+          </p>
+          <div class="personal-best">
+            PERSONAL BEST <span id="personal-best">—</span>
+          </div>
         </div>
+        <div class="menu-machine">
+          <div class="machine-label">
+            <span>TYPE TO SELECT</span><span>01 / SOLO</span>
+          </div>
+          <div class="menu-options">
+            <button data-command="play">
+              <span class="option-index">01</span
+              ><span><strong>play</strong><small>You vs. the CPU</small></span
+              ><span class="option-piece cyan">▟</span></button
+            ><button data-command="practice">
+              <span class="option-index">02</span
+              ><span
+                ><strong>practice</strong
+                ><small>No pressure. Just rhythm.</small></span
+              ><span class="option-piece violet">▛</span></button
+            ><button data-command="guide">
+              <span class="option-index">03</span
+              ><span><strong>guide</strong><small>Learn the moves</small></span
+              ><span class="option-piece yellow">▚</span></button
+            ><button data-command="settings">
+              <span class="option-index">04</span
+              ><span><strong>settings</strong><small>Make it yours</small></span
+              ><span class="option-piece orange">▙</span>
+            </button>
+            <button data-command="playbook"><span class="option-index">05</span><span><strong>playbook</strong><small>Column clears. Full clears. Rebuilds.</small></span><span class="option-piece cyan">▜</span></button>
+          </div>
+          <div class="equipped-line">RULES <span id="equipped-opener">ANY WORD · SAME-COLUMN ATTACKS</span></div>
+          <form id="command-form">
+            <span aria-hidden="true">&gt;</span
+            ><input
+              id="command"
+              aria-label="Type a menu command"
+              placeholder="type play to begin"
+              autocomplete="off"
+              autocapitalize="none"
+              spellcheck="false"
+            /><kbd>↵</kbd>
+          </form>
+          <p id="command-hint" aria-live="polite">
+            Type a command · Esc then hjkl to navigate · Enter to select.
+          </p>
+        </div>
+        <div class="floor-blocks" aria-hidden="true"></div>
+      </section>
+      <section id="arena" hidden>
+        <div class="arena-heading">
+          <div>
+            <span class="eyebrow" id="mode-label">SOLO / CPU BATTLE</span>
+            <h1>Find your flow.</h1>
+          </div>
+          <button id="pause-btn"><kbd>ESC</kbd> PAUSE</button>
+        </div>
+        <div class="arena-layout">
+          <aside class="ghost-bank" id="ghost-bank" aria-label="Upstack word bank" hidden><h2>GHOST BANK</h2><p>Find two words containing the column vowel. Space locks each word.</p><div id="ghost-columns"></div><p id="ghost-progress" role="status"></p></aside>
+          <aside class="telemetry">
+            <div class="stat">
+              <span>SCORE</span><strong id="score">000000</strong>
+            </div>
+            <div class="stat"><span>WPM</span><strong id="wpm">0</strong></div>
+            <div class="stat">
+              <span>ACCURACY</span
+              ><strong id="accuracy">100<small>%</small></strong>
+            </div>
+            <div class="stat">
+              <span>COLUMNS CLEARED</span><strong id="lines">0</strong>
+            </div>
+            <div class="stat timer">
+              <span>TIME</span><strong id="time">0:00</strong>
+            </div>
+          </aside>
+          <div class="player-side">
+            <div class="board-heading">
+              <span>01 <b>YOU</b></span
+              ><span id="player-height">4 / 8 ROWS</span>
+            </div>
+            <div class="setup-strip">
+              <div class="setup-title"><span id="setup-state" class="phase-badge">DOWNSTACK</span></div>
+              <div id="route-preview" aria-label="Board rules"></div>
+              <div class="setup-detail"><b id="setup-name">Type any word on your board</b><span>READY <b id="banked-bonus">0</b> · HEIGHT <b id="stack-height">0</b></span></div>
+            </div>
+            <div class="column-legend" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+            <div class="well" id="player-well">
+              <div class="ceiling">TOP OUT</div>
+              <div id="player-stack" class="stack"></div>
+              <div id="ghost-silhouette" aria-hidden="true" hidden></div>
+              <div id="combo-toast" aria-hidden="true"></div>
+            </div>
+            <div class="typing-line">
+              <span aria-hidden="true">&gt;</span
+              ><input
+                id="typing"
+                aria-label="Type any word on your board"
+                autocomplete="off"
+                autocapitalize="none"
+                autocorrect="off"
+                spellcheck="false"
+                placeholder="type any word on your board..."
+              />
+            </div>
+            <div class="typing-help">
+              <span><kbd>SPACE</kbd> LOCK WORD</span
+              ><span><kbd>ENTER</kbd> ATTACK</span>
+            </div>
+            <p class="route-hint">Any word · Space to clear · completed columns send automatically</p>
+          </div>
+          <div class="combo-panel">
+            <span>COMBO</span><strong id="combo">0</strong>
+            <div id="multiplier">×1.00</div>
+            <div class="charge-track"><div id="charge"></div></div>
+            <span id="attack-power">0 ATTACK</span
+            ><button id="attack-btn"><kbd>↵</kbd> SEND</button>
+            <div id="reward-feedback" role="status" aria-live="polite"></div>
+            <div id="event-label" role="status" aria-live="polite">
+              Build your chain.
+            </div>
+          </div>
+          <div class="cpu-side">
+            <div class="board-heading">
+              <span>02 <b id="opponent-name">CPU</b></span
+              ><span id="cpu-height">4 / 8 ROWS</span>
+            </div>
+            <div class="well cpu-well" id="cpu-well">
+              <div class="ceiling">TOP OUT</div>
+              <div id="cpu-stack" class="stack"></div>
+            </div>
+            <div class="cpu-caption">
+              <span class="online-dot"></span>
+              <span id="cpu-description">YOUR WPM + 20</span><b id="cpu-speed">20 WPM</b>
+            </div>
+            <p class="battle-note">
+              <span id="cpu-threat">SAME COLUMN RULES</span><br />
+              Clear any word. Attack the same column.<br />Full clear → upstack → rebuild. Keep cycling until topout.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <span>STACK. TYPE. STRIKE.</span
+      ><span id="footer-hint">KEYBOARD FIRST. ALWAYS.</span
+      ><span>TYPO / TETROMINO</span>
+    </footer>
+    <div id="overlay" class="overlay" hidden>
+      <section
+        class="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="overlay-title"
+      >
+        <div class="dialog-top">
+          <span id="dialog-tag">TYPETRIS</span
+          ><button id="close-overlay" aria-label="Close dialog">
+            <kbd>ESC</kbd>
+          </button>
+        </div>
+        <h2 id="overlay-title"></h2>
+        <div id="overlay-content"></div>
+      </section>
     </div>
-    <div id="multiplayer-container">
-        <div id="player-game" class="game-instance">
-            <h2>You</h2>
-            <div id="danger-bar-container">
-                <div id="advantage-bar-fill"></div>
-                <div id="danger-bar-fill"></div>
-            </div>
-            <div id="combo-diff-indicator" class="hidden"></div>
-            <div id="player-caret" class="caret"></div>
-            <div id="player-word-grid" class="word-grid">
-                <!-- Player words will be generated here -->
-            </div>
-            <div id="player-status-bar" class="status-bar">
-                <span>WPM: <span id="player-wpm">0</span></span>
-                <span>Combo: <span id="player-combo">0</span></span>
-                <span>Grid Height: <span id="player-grid-height">4</span></span>
-            </div>
-            <input type="text" id="player-input" placeholder="Type the target word here..." autofocus autocomplete="off" spellcheck="false">
-            <button id="restart-btn" class="hidden">Retry</button>
-        </div>
-
-        <div id="opponent-game" class="game-instance">
-            <h2>Opponent</h2>
-            <div id="opponent-caret" class="caret"></div>
-            <div id="opponent-word-grid" class="word-grid">
-                <!-- Opponent words will be generated here -->
-            </div>
-            <div id="opponent-status-bar" class="status-bar">
-                <span>WPM: <span id="opponent-wpm">0</span></span>
-                <span>Combo: <span id="opponent-combo">0</span></span>
-                <span>Grid Height: <span id="opponent-grid-height">4</span></span>
-            </div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-</body>
+    <div id="effects" aria-hidden="true"></div>
+    <script src="corpus.cb79e6922b28.js"></script>
+    <script src="engine.54a595472b68.js"></script>
+    <script src="script.d0a8140c1f70.js"></script>
+    <script src="navigation.js"></script>
+  </body>
 </html>
