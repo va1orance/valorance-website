@@ -434,10 +434,64 @@ if (form && answer && response && reset) {
   let runId = 0;
   let timers = [];
   let spinInterval = null;
+  let isGenerating = false;
   let userScrolled = false;
+  let lastScrollTop = 0;
+  let touchStartY = null;
+  let hasAutoPlayed = false;
 
-  scroller.addEventListener('wheel', () => { userScrolled = true; }, { passive: true });
-  scroller.addEventListener('touchstart', () => { userScrolled = true; }, { passive: true });
+  function pinToBottom() {
+    if (!isGenerating || userScrolled || motion.matches) return;
+    const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+    scroller.scrollTop = maxScroll;
+    lastScrollTop = scroller.scrollTop;
+  }
+
+  function pinToBottomSoon() {
+    pinToBottom();
+    requestAnimationFrame(pinToBottom);
+  }
+
+  scroller.addEventListener('wheel', event => {
+    if (!isGenerating) return;
+    if (event.deltaY < 0 && scroller.scrollTop > 0) {
+      userScrolled = true;
+    } else if (event.deltaY > 0 && scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 28) {
+      userScrolled = false;
+      pinToBottom();
+    }
+  }, { passive: true });
+
+  scroller.addEventListener('touchstart', event => {
+    touchStartY = event.touches[0] ? event.touches[0].clientY : null;
+  }, { passive: true });
+
+  scroller.addEventListener('touchmove', event => {
+    if (!isGenerating || touchStartY === null || !event.touches[0]) return;
+    if (event.touches[0].clientY - touchStartY > 14 && scroller.scrollTop > 0) {
+      userScrolled = true;
+    }
+  }, { passive: true });
+
+  scroller.addEventListener('scroll', () => {
+    if (!isGenerating) {
+      lastScrollTop = scroller.scrollTop;
+      return;
+    }
+    const distFromBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+    if (scroller.scrollTop < lastScrollTop - 8 && distFromBottom > 36) {
+      userScrolled = true;
+    } else if (distFromBottom <= 24) {
+      userScrolled = false;
+    }
+    lastScrollTop = scroller.scrollTop;
+  }, { passive: true });
+
+  article.querySelectorAll('.physics-figure img').forEach(img => {
+    img.addEventListener('load', () => {
+      if (isGenerating && !userScrolled) pinToBottomSoon();
+    });
+  });
 
   function clearTimers() {
     timers.forEach(id => clearTimeout(id));
@@ -450,15 +504,6 @@ if (form && answer && response && reset) {
       const id = setTimeout(() => resolve(myRun === runId), ms);
       timers.push(id);
     });
-  }
-
-  function keepInView(el) {
-    if (userScrolled || motion.matches) return;
-    const box = el.getBoundingClientRect();
-    const sBox = scroller.getBoundingClientRect();
-    if (box.bottom > sBox.bottom - 24) {
-      scroller.scrollTop += (box.bottom - sBox.bottom) + 48;
-    }
   }
 
   function typeTextIntoNode(textNode, fullText, caret, containerEl, myRun, speedMs, pace) {
@@ -474,7 +519,7 @@ if (form && answer && response && reset) {
         const chunk = fullText.slice(pos, pos + stepSize);
         pos += chunk.length;
         textNode.nodeValue = fullText.slice(0, pos);
-        keepInView(containerEl);
+        pinToBottom();
         if (pos >= fullText.length) {
           resolve(true);
           return;
@@ -525,7 +570,7 @@ if (form && answer && response && reset) {
     labelEl.textContent = label;
     thinking.hidden = false;
     thinking.classList.add('script-reveal');
-    keepInView(thinking);
+    pinToBottomSoon();
     const t0 = Date.now();
     let frame = 0;
     spinEl.textContent = SPIN[0];
@@ -556,8 +601,20 @@ if (form && answer && response && reset) {
     });
   }
 
+  function preparePendingPlayback() {
+    lessonNodes.forEach(node => {
+      node.classList.add('script-hidden');
+      node.classList.remove('script-reveal');
+    });
+    promptBlock.classList.remove('script-hidden');
+    skipBtn.hidden = false;
+    replayBtn.hidden = true;
+  }
+
   function showAllImmediately() {
     runId++;
+    hasAutoPlayed = true;
+    isGenerating = false;
     clearTimers();
     thinking.hidden = true;
     promptBlock.after(thinking);
@@ -579,7 +636,10 @@ if (form && answer && response && reset) {
     runId++;
     const myRun = runId;
     clearTimers();
+    hasAutoPlayed = true;
+    isGenerating = true;
     userScrolled = false;
+    lastScrollTop = 0;
     scroller.scrollTop = 0;
     replayBtn.hidden = true;
     skipBtn.hidden = false;
@@ -594,62 +654,67 @@ if (form && answer && response && reset) {
     promptBlock.classList.remove('script-hidden');
     promptBlock.classList.add('script-reveal');
 
-    // 1. User asks Learneth to teach mechanics.
-    if (promptTextEl) {
-      const promptSnap = [document.createTextNode(promptFullText)];
-      if (!(await typeRichElement(promptTextEl, promptSnap, myRun, pace.promptSpeed, pace))) return;
-      if (!(await wait(mode === 'example' ? 500 : 180, myRun))) return;
-    }
-
-    // 2. "Learneth is thinking…" popup while building the lesson plan.
-    if (!(await showThinking('Learneth is thinking… planning from your Physics notes', pace.thinkPlanMs, promptBlock, myRun))) return;
-
-    // 3. Stream the lesson blocks onto the page in natural beats.
-    for (let i = 0; i < lessonNodes.length; i++) {
-      if (myRun !== runId) return;
-      const node = lessonNodes[i];
-      const isFeedback = node.classList.contains('feedback');
-      const isLearner = node.classList.contains('learner');
-      if (isLearner) {
-        if (!(await wait(pace.learnerBeforePause, myRun))) return;
-      }
-      if (isFeedback) {
-        const prev = lessonNodes[i - 1];
-        if (!(await showThinking('Learneth is thinking… checking your reasoning', pace.thinkCheckMs, prev, myRun))) return;
+    try {
+      // 1. User asks Learneth to teach mechanics.
+      if (promptTextEl) {
+        const promptSnap = [document.createTextNode(promptFullText)];
+        if (!(await typeRichElement(promptTextEl, promptSnap, myRun, pace.promptSpeed, pace))) return;
+        if (!(await wait(mode === 'example' ? 500 : 180, myRun))) return;
       }
 
-      const target = streamTargets.get(node);
-      if (target) {
-        target.items.forEach(({ el }) => el.replaceChildren());
-      }
-      node.classList.remove('script-hidden');
-      node.classList.add('script-reveal');
-      keepInView(node);
+      // 2. "Learneth is thinking…" popup while building the lesson plan.
+      if (!(await showThinking('Learneth is thinking… planning from your Physics notes', pace.thinkPlanMs, promptBlock, myRun))) return;
 
-      if (target) {
-        const speed = target.role === 'learner' ? pace.learnerSpeed : pace.tutorSpeed;
-        for (let j = 0; j < target.items.length; j++) {
-          const { el, snapshot } = target.items[j];
-          if (!(await typeRichElement(el, snapshot, myRun, speed, pace))) return;
-          if (j < target.items.length - 1) {
-            if (!(await wait(mode === 'example' ? 420 : 140, myRun))) return;
-          }
+      // 3. Stream the lesson blocks onto the page in natural beats while holding scroll at the bottom.
+      for (let i = 0; i < lessonNodes.length; i++) {
+        if (myRun !== runId) return;
+        const node = lessonNodes[i];
+        const isFeedback = node.classList.contains('feedback');
+        const isLearner = node.classList.contains('learner');
+        if (isLearner) {
+          if (!(await wait(pace.learnerBeforePause, myRun))) return;
         }
-        const afterPause = isFeedback ? pace.afterFeedbackPause : pace.beatPause;
-        if (!(await wait(afterPause, myRun))) return;
-      } else {
-        const pause = node.tagName === 'FIGURE'
-          ? pace.figurePause
-          : node.classList.contains('plan')
-            ? pace.planPause
-            : pace.beatPause;
-        if (!(await wait(pause, myRun))) return;
-      }
-    }
+        if (isFeedback) {
+          const prev = lessonNodes[i - 1];
+          if (!(await showThinking('Learneth is thinking… checking your reasoning', pace.thinkCheckMs, prev, myRun))) return;
+        }
 
-    if (myRun === runId) {
-      skipBtn.hidden = true;
-      replayBtn.hidden = false;
+        const target = streamTargets.get(node);
+        if (target) {
+          target.items.forEach(({ el }) => el.replaceChildren());
+        }
+        node.classList.remove('script-hidden');
+        node.classList.add('script-reveal');
+        pinToBottomSoon();
+
+        if (target) {
+          const speed = target.role === 'learner' ? pace.learnerSpeed : pace.tutorSpeed;
+          for (let j = 0; j < target.items.length; j++) {
+            const { el, snapshot } = target.items[j];
+            if (!(await typeRichElement(el, snapshot, myRun, speed, pace))) return;
+            pinToBottom();
+            if (j < target.items.length - 1) {
+              if (!(await wait(mode === 'example' ? 420 : 140, myRun))) return;
+            }
+          }
+          const afterPause = isFeedback ? pace.afterFeedbackPause : pace.beatPause;
+          if (!(await wait(afterPause, myRun))) return;
+        } else {
+          const pause = node.tagName === 'FIGURE'
+            ? pace.figurePause
+            : node.classList.contains('plan')
+              ? pace.planPause
+              : pace.beatPause;
+          if (!(await wait(pause, myRun))) return;
+        }
+      }
+      pinToBottomSoon();
+    } finally {
+      if (myRun === runId) {
+        isGenerating = false;
+        skipBtn.hidden = true;
+        replayBtn.hidden = false;
+      }
     }
   }
 
@@ -662,12 +727,26 @@ if (form && answer && response && reset) {
       playScript({ forceAnimate: false, mode: 'example' });
     }
   });
+  window.addEventListener('learneth-preview-revealed', () => {
+    if (!hasAutoPlayed && !motion.matches) {
+      playScript({ forceAnimate: false, mode: isFullscreenExample() ? 'example' : 'home' });
+    }
+  });
 
-  // Play immediately on first load for both the homepage and the fullscreen example page.
+  // Start immediately for reduced motion, fullscreen example, or when page-streaming is inactive;
+  // otherwise wait until the user scrolls into #preview so they watch it stream and hold scroll at the bottom.
   if (motion.matches) {
     showAllImmediately();
+  } else if (isFullscreenExample()) {
+    playScript({ forceAnimate: false, mode: 'example' });
   } else {
-    playScript({ forceAnimate: false, mode: isFullscreenExample() ? 'example' : 'home' });
+    const previewSec = document.querySelector('#preview[data-stream-section]');
+    const deferUntilReveal = Boolean(previewSec && !document.querySelector('#page-thinking.is-done') && document.querySelector('#page-thinking'));
+    if (deferUntilReveal) {
+      preparePendingPlayback();
+    } else {
+      playScript({ forceAnimate: false, mode: 'home' });
+    }
   }
 })();
 
@@ -807,6 +886,13 @@ if (form && answer && response && reset) {
   const activeTimers = [];
   const restorers = [];
   let finishedAll = false;
+  let previewSignaled = false;
+
+  function signalPreviewRevealed(immediate) {
+    if (previewSignaled) return;
+    previewSignaled = true;
+    window.dispatchEvent(new CustomEvent('learneth-preview-revealed', { detail: { immediate } }));
+  }
 
   document.documentElement.classList.add('js-page-stream');
   sections.forEach(sec => sec.classList.add('stream-pending'));
@@ -933,7 +1019,12 @@ if (form && answer && response && reset) {
       await typeOutElement(introP, 5, 14);
     }
     bodyBlocks.forEach((el, i) => {
-      const tid = setTimeout(() => el.classList.remove('type-wait'), i * 80);
+      const tid = setTimeout(() => {
+        el.classList.remove('type-wait');
+        if (sec.id === 'preview' && el.classList.contains('workspace')) {
+          signalPreviewRevealed(false);
+        }
+      }, i * 150);
       activeTimers.push(() => clearTimeout(tid));
     });
   }
@@ -952,6 +1043,7 @@ if (form && answer && response && reset) {
       if (bar) { bar.classList.remove('is-thinking'); bar.classList.add('is-done'); }
       if (barSpin) barSpin.textContent = '✓';
       if (barText && originalText) barText.textContent = originalText;
+      if (sec.id === 'preview') signalPreviewRevealed(true);
       if (pending.size === 0 && skipBtn) skipBtn.hidden = true;
       return;
     }
@@ -969,11 +1061,14 @@ if (form && answer && response && reset) {
     }
 
     bar.classList.add('is-thinking');
-    barText.textContent = 'Learneth is drafting this section…';
+    const draftStart = performance.now();
+    barText.textContent = 'Learneth is drafting this section… 0.0s';
     let f = 0;
     const iv = setInterval(() => {
       f = (f + 1) % SPIN.length;
       barSpin.textContent = SPIN[f];
+      const elapsed = ((performance.now() - draftStart) / 1000).toFixed(1);
+      barText.textContent = `Learneth is drafting this section… ${elapsed}s`;
     }, 75);
     let thinkingDone = false;
     function restoreThinking() {
@@ -991,7 +1086,7 @@ if (form && answer && response && reset) {
       typeContentSection(sec).then(() => {
         if (pending.size === 0 && skipBtn) skipBtn.hidden = true;
       });
-    }, 280);
+    }, 650);
     activeTimers.push(() => { clearInterval(iv); clearTimeout(tid); });
   }
 
@@ -1004,6 +1099,7 @@ if (form && answer && response && reset) {
       sec.classList.remove('stream-pending');
       sec.querySelectorAll('.type-wait').forEach(el => el.classList.remove('type-wait'));
     });
+    signalPreviewRevealed(true);
     thinkingEl.classList.add('is-done');
     if (spinEl) spinEl.textContent = '✓';
     if (labelEl) labelEl.textContent = 'Generated live · interactive page';
@@ -1044,10 +1140,52 @@ if (form && answer && response && reset) {
             revealSection(entry.target, false);
           }
         });
-      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+      }, { rootMargin: '0px 0px -36% 0px', threshold: 0.01 });
       sections.forEach(sec => {
         if (sec.dataset.streamSection !== 'hero') io.observe(sec);
       });
+
+      const revealTargetHash = rawHash => {
+        const id = (rawHash || '').replace(/^#/, '');
+        if (!id) return;
+        const target = document.getElementById(id);
+        const sec = target ? target.closest('[data-stream-section]') : null;
+        if (sec && pending.has(sec)) {
+          io.unobserve(sec);
+          revealSection(sec, false);
+        }
+      };
+
+      const onScrollBottomCheck = () => {
+        if (finishedAll || pending.size === 0) return;
+        const nearBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 60;
+        if (!nearBottom) return;
+        [...pending].forEach(sec => {
+          if (sec.dataset.streamSection === 'hero') return;
+          const rect = sec.getBoundingClientRect();
+          if (rect.top < window.innerHeight - 16) {
+            io.unobserve(sec);
+            revealSection(sec, false);
+          }
+        });
+      };
+
+      const onHashChange = () => revealTargetHash(location.hash);
+      const onAnchorClick = event => {
+        const link = event.target.closest && event.target.closest('a[href^="#"]');
+        if (link) revealTargetHash(link.getAttribute('href'));
+      };
+
+      window.addEventListener('scroll', onScrollBottomCheck, { passive: true });
+      window.addEventListener('hashchange', onHashChange);
+      document.addEventListener('click', onAnchorClick);
+      activeTimers.push(() => {
+        io.disconnect();
+        window.removeEventListener('scroll', onScrollBottomCheck);
+        window.removeEventListener('hashchange', onHashChange);
+        document.removeEventListener('click', onAnchorClick);
+      });
+      if (location.hash) revealTargetHash(location.hash);
     } else {
       finishAll();
     }

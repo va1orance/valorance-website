@@ -202,7 +202,7 @@
 
   function syncSessionChrome() {
     $('session-model').textContent = providerMode === 'free'
-      ? 'Free public model (openrouter/free) · lower quality, not private'
+      ? 'Free public model (nvidia/nemotron-3.5-lightning:free) · lower quality, not private'
       : model;
     $('image-endpoint').textContent = imageModel
       ? 'Image endpoint: ' + base + '/images/generations (same API key)'
@@ -327,7 +327,7 @@
     if (teaching === 'custom' && !goal) { notice('Add your teaching instructions before continuing.'); return; }
     if (material.length > 12000 || goal.length > 500) { notice('Study input exceeds the demo limit.'); return; }
 
-    let nextMode = 'byo', nextKey = '', nextModel = 'openrouter/free', nextBase = '', nextEndpoint = freeDemoUrl, nextImageModel = '';
+    let nextMode = 'byo', nextKey = '', nextModel = 'nvidia/nemotron-3.5-lightning:free', nextBase = '', nextEndpoint = freeDemoUrl, nextImageModel = '';
     if (providerMode === 'free' && freeDemoUrl) {
       nextMode = 'free';
     } else {

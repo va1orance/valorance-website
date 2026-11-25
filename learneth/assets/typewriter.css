@@ -288,7 +288,7 @@ nav a:hover { color: var(--ink-strong); }
 }
 
 /* Preview workspace (the writing desk) */
-.preview-section { padding: 48px 0 60px; border-bottom: 1px solid var(--line); }
+.preview-section { padding: 88px 0 112px; border-bottom: 1px solid var(--line); }
 
 .eyebrow {
   font: 10px/1.6 var(--mono);
@@ -401,7 +401,6 @@ h2 {
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--editor);
-  scroll-behavior: smooth;
 }
 
 .document {
@@ -584,19 +583,23 @@ h2 {
 
 html.js-page-stream [data-stream-section].stream-pending > :not(.section-think) {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(32px);
 }
-html.js-page-stream [data-stream-section] > :not(.section-think),
+html.js-page-stream [data-stream-section].stream-pending > .section-think:not(.is-thinking):not(.is-done) {
+  opacity: 0;
+  transform: translateY(16px);
+}
+html.js-page-stream [data-stream-section] > *,
 .type-slot {
-  transition: opacity 0.24s ease-out, transform 0.24s ease-out;
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .type-slot.type-wait {
   opacity: 0;
-  transform: translateY(6px);
+  transform: translateY(24px);
 }
 
 /* How it works & Deploy tiers in the writing-desk aesthetic */
-.approach, .setup { padding: 64px 0; border-bottom: 1px solid var(--line); display: block; }
+.approach, .setup { padding: 112px 0; border-bottom: 1px solid var(--line); display: block; }
 .section-head { max-width: 660px; margin-bottom: 36px; }
 .section-head p:last-child { color: var(--muted); font-size: 16px; margin: 0; }
 
@@ -702,6 +705,11 @@ footer {
 @media (max-width: 960px) {
   .approach-grid, .tier-grid { grid-template-columns: 1fr; }
   nav { display: none; }
+}
+
+@media (max-width: 768px) {
+  .preview-section { padding: 48px 0 64px; }
+  .approach, .setup { padding: 64px 0; }
 }
 
 @media (max-width: 680px) {
