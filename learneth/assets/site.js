@@ -1,10 +1,10 @@
 "use strict";
-// Theme switcher (Dark / Light) — swaps palette and theme-matched screenshots.
+// Theme switcher (Light / Dark) — swaps palette and theme-matched screenshots and figures.
 (() => {
   const buttons = [...document.querySelectorAll('.theme-btn[data-theme-choice]')];
   const VALID = new Set(['dark', 'light']);
   function applyTheme(theme) {
-    if (!VALID.has(theme)) theme = 'dark';
+    if (!VALID.has(theme)) theme = 'light';
     document.documentElement.setAttribute('data-theme', theme);
     buttons.forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.themeChoice === theme)));
     document.querySelectorAll('img[data-dark-src][data-light-src]').forEach(img => {
@@ -13,7 +13,7 @@
     });
   }
   const urlTheme = new URLSearchParams(location.search).get('theme');
-  let initial = 'dark';
+  let initial = 'light';
   if (urlTheme && VALID.has(urlTheme)) {
     initial = urlTheme;
   } else {
@@ -37,11 +37,6 @@ const answer = document.querySelector("#sample-answer");
 const response = document.querySelector("#response");
 const reset = document.querySelector("#reset");
 if (form && answer && response && reset) {
-  const PRESETS = {
-    direction: "Yes — its speed stays 20 m/s, but its direction keeps changing around the bend, so its velocity changes and it is accelerating.",
-    constant: "No — the speedometer stays at 20 m/s the whole time, so it isn't speeding up or accelerating.",
-    sideways: "I think it might be accelerating because you feel pulled sideways in the turn, even though the speed stays constant."
-  };
   let streamToken = 0;
   let streamTimer = null;
   let liveController = null;
@@ -236,13 +231,11 @@ if (form && answer && response && reset) {
     else streamTimer = setTimeout(() => finishWith(fallbackReply), 320);
   }
 
-  form.querySelectorAll(".sample-pick").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const preset = PRESETS[btn.dataset.preset];
-      if (!preset) return;
-      answer.value = preset;
-      runScriptedTurn(preset);
-    });
+  answer.addEventListener("keydown", event => {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && !event.isComposing) {
+      event.preventDefault();
+      form.requestSubmit();
+    }
   });
 
   form.addEventListener("submit", event => {
@@ -355,7 +348,7 @@ if (form && answer && response && reset) {
   if (!article || !scroller || !promptBlock || !thinking || !replayBtn || !skipBtn) return;
 
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const SPIN = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏';
+  const DOTS = ['·', '··', '···'];
   const spinEl = thinking.querySelector('.think-spin');
   const labelEl = thinking.querySelector('.think-label');
   const timeEl = thinking.querySelector('.think-time');
@@ -572,15 +565,14 @@ if (form && answer && response && reset) {
     thinking.classList.add('script-reveal');
     pinToBottomSoon();
     const t0 = Date.now();
-    let frame = 0;
-    spinEl.textContent = SPIN[0];
+    spinEl.textContent = DOTS[0];
     timeEl.textContent = '0.0s';
     if (spinInterval) clearInterval(spinInterval);
     spinInterval = setInterval(() => {
       if (myRun !== runId) { clearInterval(spinInterval); spinInterval = null; return; }
-      frame = (frame + 1) % SPIN.length;
-      spinEl.textContent = SPIN[frame];
-      timeEl.textContent = ((Date.now() - t0) / 1000).toFixed(1) + 's';
+      const elapsed = Date.now() - t0;
+      spinEl.textContent = DOTS[Math.floor(elapsed / 240) % DOTS.length];
+      timeEl.textContent = (elapsed / 1000).toFixed(1) + 's';
     }, 90);
     const ok = await wait(durationMs, myRun);
     if (spinInterval) { clearInterval(spinInterval); spinInterval = null; }
@@ -750,134 +742,14 @@ if (form && answer && response && reset) {
   }
 })();
 
-// Live page-generation feel: "Learneth is thinking…" intro, real-time section drafting on scroll,
-// and one-click Q&A chips (no typing required).
+// Live page-generation feel: brisk hero readiness and deliberate scroll reveal.
 (() => {
   const thinkingEl = document.querySelector('#page-thinking');
   const skipBtn = document.querySelector('#page-skip');
   const sections = [...document.querySelectorAll('[data-stream-section]')];
-  const checkinChips = [...document.querySelectorAll('.checkin-chip[data-q]')];
-  const checkinReply = document.querySelector('#checkin-reply');
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const SPIN = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏';
+  const DOTS = ['·', '··', '···'];
 
-  // 1. One-click interactive Q&A check-in (zero typing required).
-  if (checkinChips.length && checkinReply) {
-    const ANSWERS = {
-      chatgpt: {
-        label: '↳ LEARNETH · ON WHY NOT A CHAT SIDEBAR',
-        text: 'Chat windows vanish into a separate tab and reward passive reading. Learneth works directly inside your Markdown notes—diagnosing what you missed, asking one focused question at a time, and leaving a clean study log beside your source.',
-        jumpText: 'See it in action below ↓',
-        jumpHref: '#preview',
-      },
-      hosting: {
-        label: '↳ LEARNETH · SELF-HOSTED VS CLOUD',
-        text: 'Run it free forever on your own Docker host or laptop with your own API key (or local Claude Code, Codex, or ACP). Don’t want to manage servers? Learneth Cloud ($5–$15/mo) hosts your private workspace with hard-capped OpenRouter Auto Router credits.',
-        jumpText: 'Compare plans & self-hosting ↓',
-        jumpHref: '#setup',
-      },
-      files: {
-        label: '↳ LEARNETH · YOUR ORIGINAL NOTES',
-        text: 'Never touched. Learneth creates a sibling “+ Learning Session” Markdown file beside your original note, so your source stays clean and everything stays portable plain text with zero lock-in.',
-        jumpText: 'Inspect how sessions are stored ↓',
-        jumpHref: '#approach',
-      },
-    };
-    let qaToken = 0;
-    let qaTimer = null;
-    let qaSpin = null;
-
-    function clearQa() {
-      clearTimeout(qaTimer);
-      clearInterval(qaSpin);
-      qaTimer = null;
-      qaSpin = null;
-    }
-
-    checkinChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        const entry = ANSWERS[chip.dataset.q];
-        if (!entry) return;
-        qaToken++;
-        const myToken = qaToken;
-        clearQa();
-        checkinChips.forEach(b => b.setAttribute('aria-pressed', String(b === chip)));
-        checkinReply.hidden = false;
-
-        const meta = document.createElement('div');
-        meta.className = 'checkin-reply-meta';
-        const spin = document.createElement('span');
-        spin.className = 'think-spin';
-        spin.setAttribute('aria-hidden', 'true');
-        const label = document.createElement('span');
-        meta.append(spin, label);
-
-        const body = document.createElement('p');
-        const jump = document.createElement('a');
-        jump.className = 'checkin-reply-jump';
-        jump.href = entry.jumpHref;
-        jump.textContent = entry.jumpText;
-
-        if (motion.matches) {
-          checkinReply.setAttribute('aria-live', 'polite');
-          checkinReply.replaceChildren(meta, body);
-          spin.textContent = '✓';
-          label.textContent = entry.label;
-          body.textContent = entry.text;
-          checkinReply.append(jump);
-          return;
-        }
-
-        checkinReply.replaceChildren(meta, body);
-        checkinReply.setAttribute('aria-live', 'off');
-        let frame = 0;
-        const t0 = performance.now();
-        spin.textContent = SPIN[0];
-        label.textContent = 'Learneth is thinking… 0.0s';
-        qaSpin = setInterval(() => {
-          if (myToken !== qaToken) { clearInterval(qaSpin); return; }
-          frame = (frame + 1) % SPIN.length;
-          spin.textContent = SPIN[frame];
-          const sec = ((performance.now() - t0) / 1000).toFixed(1);
-          label.textContent = `Learneth is thinking… ${sec}s`;
-        }, 75);
-
-        qaTimer = setTimeout(() => {
-          if (myToken !== qaToken) return;
-          clearInterval(qaSpin);
-          qaSpin = null;
-          spin.textContent = '✓';
-          label.textContent = entry.label;
-
-          const node = document.createTextNode('');
-          const caret = document.createElement('span');
-          caret.className = 'stream-caret';
-          caret.setAttribute('aria-hidden', 'true');
-          body.replaceChildren(node, caret);
-
-          let pos = 0;
-          function step() {
-            if (myToken !== qaToken) return;
-            if (document.hidden) { qaTimer = setTimeout(step, 200); return; }
-            const nextPos = Math.min(entry.text.length, pos + 3);
-            const finished = nextPos >= entry.text.length;
-            if (finished) checkinReply.setAttribute('aria-live', 'polite');
-            pos = nextPos;
-            node.nodeValue = entry.text.slice(0, pos);
-            if (finished) {
-              caret.remove();
-              checkinReply.append(jump);
-              return;
-            }
-            qaTimer = setTimeout(step, 16);
-          }
-          step();
-        }, 360);
-      });
-    });
-  }
-
-  // 2. Real-time page typing on initial load + scroll (after full page load).
   if (!thinkingEl || !sections.length || motion.matches) return;
 
   const spinEl = thinkingEl.querySelector('.think-spin');
@@ -898,106 +770,41 @@ if (form && answer && response && reset) {
   sections.forEach(sec => sec.classList.add('stream-pending'));
   if (skipBtn) skipBtn.hidden = false;
 
-  // Type out an element's visible text nodes in place (preserving inline tags like <br>, <u>, <span>)
-  // while leaving .sr-only and .rotating-word intact.
-  function typeOutElement(el, chunkSize, speedMs) {
+  function revealElements(elements, stepMs, afterEach) {
     return new Promise(resolve => {
-      if (!el || finishedAll) { resolve(); return; }
-      const textEntries = [];
-
-      function collect(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-          if (node.nodeValue && node.nodeValue.trim().length > 0) {
-            textEntries.push({ node, full: node.nodeValue });
-            node.nodeValue = '';
-          }
-          return;
-        }
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          if (node.classList.contains('sr-only') || node.classList.contains('rotating-word')) return;
-          [...node.childNodes].forEach(collect);
-        }
-      }
-
-      collect(el);
-      if (!textEntries.length) { resolve(); return; }
-
-      const caret = document.createElement('span');
-      caret.className = 'stream-caret';
-      caret.setAttribute('aria-hidden', 'true');
-      let done = false;
-      let tid = null;
-
-      function restoreNow() {
-        if (done) return;
-        done = true;
-        clearTimeout(tid);
-        caret.remove();
-        textEntries.forEach(({ node, full }) => { node.nodeValue = full; });
+      if (!elements.length || finishedAll) {
+        elements.forEach(el => el.classList.remove('type-wait'));
         resolve();
+        return;
       }
-      restorers.push(restoreNow);
-
-      let idx = 0;
-      let pos = 0;
-      function step() {
-        if (done || finishedAll) { restoreNow(); return; }
-        if (document.hidden) { tid = setTimeout(step, 160); return; }
-        const cur = textEntries[idx];
-        if (!cur) {
-          done = true;
-          caret.remove();
-          resolve();
-          return;
-        }
-        if (pos === 0 && cur.node.parentNode) {
-          cur.node.after(caret);
-        }
-        pos = Math.min(cur.full.length, pos + chunkSize);
-        cur.node.nodeValue = cur.full.slice(0, pos);
-        if (pos >= cur.full.length) {
-          idx++;
-          pos = 0;
-          tid = setTimeout(step, 35);
-          return;
-        }
-        tid = setTimeout(step, speedMs);
-      }
-      activeTimers.push(() => clearTimeout(tid));
-      step();
+      let remaining = elements.length;
+      elements.forEach((el, i) => {
+        const tid = setTimeout(() => {
+          el.classList.remove('type-wait');
+          if (afterEach) afterEach(el);
+          if (--remaining === 0) resolve();
+        }, i * stepMs);
+        activeTimers.push(() => clearTimeout(tid));
+      });
     });
   }
 
   async function typeHeroSection(sec) {
-    const pill = sec.querySelector('.hero-pill');
+    const eyebrow = sec.querySelector('.hero-eyebrow');
     const h1 = sec.querySelector('h1');
     const lead = sec.querySelector('.hero-lead');
     const extras = [
+      eyebrow,
+      h1,
+      lead,
       sec.querySelector('.hero-actions'),
       sec.querySelector('.hero-trust'),
-      sec.querySelector('.page-checkin'),
+      sec.querySelector('.hero-status'),
     ].filter(Boolean);
 
     extras.forEach(el => { el.classList.add('type-slot', 'type-wait'); });
-    if (lead) lead.classList.add('type-slot', 'type-wait');
-    if (h1) h1.classList.add('type-slot', 'type-wait');
     sec.classList.remove('stream-pending');
-
-    if (pill && !finishedAll) {
-      await typeOutElement(pill, 4, 14);
-    }
-    if (h1 && !finishedAll) {
-      h1.classList.remove('type-wait');
-      await typeOutElement(h1, 2, 22);
-    }
-    if (lead && !finishedAll) {
-      lead.classList.remove('type-wait');
-      await typeOutElement(lead, 4, 15);
-    }
-    extras.forEach((el, i) => {
-      const tid = setTimeout(() => el.classList.remove('type-wait'), i * 90);
-      activeTimers.push(() => clearTimeout(tid));
-    });
+    await revealElements(extras, 70);
   }
 
   async function typeContentSection(sec) {
@@ -1007,25 +814,14 @@ if (form && answer && response && reset) {
       el => !el.classList.contains('section-think') && !el.classList.contains('section-intro') && !el.classList.contains('section-head')
     );
 
-    bodyBlocks.forEach(el => el.classList.add('type-slot', 'type-wait'));
-    if (introP) introP.classList.add('type-slot', 'type-wait');
+    const sequence = [h2, introP, ...bodyBlocks].filter(Boolean);
+    sequence.forEach(el => el.classList.add('type-slot', 'type-wait'));
     sec.classList.remove('stream-pending');
 
-    if (h2 && !finishedAll) {
-      await typeOutElement(h2, 3, 18);
-    }
-    if (introP && !finishedAll) {
-      introP.classList.remove('type-wait');
-      await typeOutElement(introP, 5, 14);
-    }
-    bodyBlocks.forEach((el, i) => {
-      const tid = setTimeout(() => {
-        el.classList.remove('type-wait');
-        if (sec.id === 'preview' && el.classList.contains('workspace')) {
-          signalPreviewRevealed(false);
-        }
-      }, i * 150);
-      activeTimers.push(() => clearTimeout(tid));
+    await revealElements(sequence, 95, el => {
+      if (sec.id === 'preview' && el.classList.contains('workspace')) {
+        signalPreviewRevealed(false);
+      }
     });
   }
 
@@ -1062,14 +858,13 @@ if (form && answer && response && reset) {
 
     bar.classList.add('is-thinking');
     const draftStart = performance.now();
-    barText.textContent = 'Learneth is drafting this section… 0.0s';
-    let f = 0;
+    barSpin.textContent = DOTS[0];
+    barText.textContent = 'Preparing section… 0.0s';
     const iv = setInterval(() => {
-      f = (f + 1) % SPIN.length;
-      barSpin.textContent = SPIN[f];
-      const elapsed = ((performance.now() - draftStart) / 1000).toFixed(1);
-      barText.textContent = `Learneth is drafting this section… ${elapsed}s`;
-    }, 75);
+      const elapsedMs = performance.now() - draftStart;
+      barSpin.textContent = DOTS[Math.floor(elapsedMs / 180) % DOTS.length];
+      barText.textContent = `Preparing section… ${(elapsedMs / 1000).toFixed(1)}s`;
+    }, 80);
     let thinkingDone = false;
     function restoreThinking() {
       if (thinkingDone) return;
@@ -1086,7 +881,7 @@ if (form && answer && response && reset) {
       typeContentSection(sec).then(() => {
         if (pending.size === 0 && skipBtn) skipBtn.hidden = true;
       });
-    }, 650);
+    }, 450);
     activeTimers.push(() => { clearInterval(iv); clearTimeout(tid); });
   }
 
@@ -1102,7 +897,7 @@ if (form && answer && response && reset) {
     signalPreviewRevealed(true);
     thinkingEl.classList.add('is-done');
     if (spinEl) spinEl.textContent = '✓';
-    if (labelEl) labelEl.textContent = 'Generated live · interactive page';
+    if (labelEl) labelEl.textContent = 'Interactive preview · scroll to explore';
     if (skipBtn) skipBtn.hidden = true;
   }
 
@@ -1111,25 +906,21 @@ if (form && answer && response && reset) {
 
   function beginGeneration() {
     if (motion.matches || pending.size === 0 || finishedAll) { finishAll(); return; }
-    // Brief "Learneth is thinking…" intro for the hero after full page load, then type hero out live.
     const tStart = performance.now();
-    let introFrame = 0;
-    if (spinEl) spinEl.textContent = SPIN[0];
-    if (labelEl) labelEl.textContent = 'Learneth is thinking… 0.0s';
+    if (spinEl) spinEl.textContent = DOTS[0];
+    if (labelEl) labelEl.textContent = 'Preparing workspace…';
     const introIv = setInterval(() => {
-      introFrame = (introFrame + 1) % SPIN.length;
-      if (spinEl) spinEl.textContent = SPIN[introFrame];
-      if (labelEl) labelEl.textContent = `Learneth is thinking… ${((performance.now() - tStart) / 1000).toFixed(1)}s`;
-    }, 75);
+      const elapsedMs = performance.now() - tStart;
+      if (spinEl) spinEl.textContent = DOTS[Math.floor(elapsedMs / 160) % DOTS.length];
+    }, 80);
     const introTid = setTimeout(() => {
       clearInterval(introIv);
-      const elapsed = ((performance.now() - tStart) / 1000).toFixed(1);
       thinkingEl.classList.add('is-done');
       if (spinEl) spinEl.textContent = '✓';
-      if (labelEl) labelEl.textContent = `Thought for ${elapsed}s · typing live`;
+      if (labelEl) labelEl.textContent = 'Interactive preview · scroll to explore';
       const hero = sections.find(s => s.dataset.streamSection === 'hero');
       if (hero) revealSection(hero, false);
-    }, 1050);
+    }, 280);
     activeTimers.push(() => { clearInterval(introIv); clearTimeout(introTid); });
 
     if ('IntersectionObserver' in window) {
@@ -1191,7 +982,7 @@ if (form && answer && response && reset) {
     }
   }
 
-  // Wait until the page (and fonts) have fully loaded and painted before starting the generation animation.
+  // Wait until the page (and fonts) have fully loaded and painted before starting reveal choreography.
   function scheduleAfterFullLoad() {
     const fontsReady = document.fonts && document.fonts.ready
       ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 600))])
@@ -1199,15 +990,15 @@ if (form && answer && response && reset) {
     fontsReady.then(() => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          const waitTid = setTimeout(beginGeneration, 220);
+          const waitTid = setTimeout(beginGeneration, 80);
           activeTimers.push(() => clearTimeout(waitTid));
         });
       });
     });
   }
 
-  if (spinEl) spinEl.textContent = SPIN[0];
-  if (labelEl) labelEl.textContent = 'Waiting for page load…';
+  if (spinEl) spinEl.textContent = DOTS[0];
+  if (labelEl) labelEl.textContent = 'Preparing workspace…';
   if (document.readyState === 'complete') {
     scheduleAfterFullLoad();
   } else {

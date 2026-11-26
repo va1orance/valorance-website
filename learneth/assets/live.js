@@ -9,11 +9,11 @@
 
   const themeButtons = [...document.querySelectorAll('.theme-btn[data-theme-choice]')];
   function setTheme(theme) {
-    const next = theme === 'light' ? 'light' : 'dark';
+    const next = theme === 'dark' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', next);
     themeButtons.forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.themeChoice === next)));
   }
-  setTheme('dark');
+  setTheme('light');
   themeButtons.forEach(btn => btn.addEventListener('click', () => setTheme(btn.dataset.themeChoice)));
 
   function updateCount(inputId, countId, max) {
@@ -176,7 +176,7 @@
     details.className = 'demo-thinking';
     details.hidden = true;
     const summary = document.createElement('summary');
-    summary.textContent = 'Tutor’s thinking · click to toggle';
+    summary.textContent = 'Thought process';
     const thinkPre = document.createElement('pre');
     thinkPre.className = 'demo-thinking-body';
     details.append(summary, thinkPre);
@@ -194,8 +194,8 @@
         details.hidden = false;
         const count = clean.length.toLocaleString('en-US');
         summary.textContent = live
-          ? `Tutor’s thinking — live (${count} chars) · click to toggle`
-          : `Tutor’s thinking (${count} chars) · click to toggle`;
+          ? `Thinking… (${count} chars)`
+          : `Thought process (${count} chars)`;
         thinkPre.textContent = clean;
         if (details.open) thinkPre.scrollTop = thinkPre.scrollHeight;
       },
@@ -219,7 +219,7 @@
       const details = document.createElement('details');
       details.className = 'demo-thinking';
       const summary = document.createElement('summary');
-      summary.textContent = `Tutor’s thinking (${thinkingText.trim().length.toLocaleString('en-US')} chars) · click to toggle`;
+      summary.textContent = `Thought process (${thinkingText.trim().length.toLocaleString('en-US')} chars)`;
       const pre = document.createElement('pre');
       pre.className = 'demo-thinking-body';
       pre.textContent = thinkingText.trim();

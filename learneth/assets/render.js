@@ -3,7 +3,7 @@
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const MAX_CHART_SERIES = 6;
   const MAX_CHART_POINTS = 24;
-  const PALETTE = ['#79a9f2', '#4ade80', '#fbbf24', '#f87171', '#c084fc', '#38bdf8'];
+  const PALETTE = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)', 'var(--chart-6)'];
   const ALLOWED_SVG_TAGS = new Set([
     'svg', 'g', 'path', 'line', 'rect', 'circle', 'ellipse',
     'polygon', 'polyline', 'text', 'tspan', 'defs', 'marker',
@@ -192,7 +192,7 @@
     const svg = svgEl('svg', { viewBox: `0 0 ${svgW} ${svgH}`, width: svgW, height: svgH, role: 'img', 'aria-label': 'Mermaid flowchart' });
     const defs = svgEl('defs');
     const marker = svgEl('marker', { id: 'demo-m-arrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' });
-    marker.append(svgEl('path', { d: 'M 0 1 L 10 5 L 0 9 z', fill: 'currentColor' }));
+    marker.append(svgEl('path', { d: 'M 0 1 L 10 5 L 0 9 z', fill: 'var(--diagram-accent)' }));
     defs.append(marker);
     svg.append(defs);
 
@@ -201,7 +201,7 @@
       if (!mem.length) continue;
       const x0 = Math.min(...mem.map(m => m.x)) - 14, y0 = Math.min(...mem.map(m => m.y)) - 26;
       const x1 = Math.max(...mem.map(m => m.x + m.w)) + 14, y1 = Math.max(...mem.map(m => m.y + m.h)) + 12;
-      svg.append(svgEl('rect', { x: x0, y: y0, width: x1 - x0, height: y1 - y0, rx: 6, fill: 'none', stroke: 'currentColor', 'stroke-opacity': '0.35', 'stroke-dasharray': '5 3', 'stroke-width': '1.2' }));
+      svg.append(svgEl('rect', { x: x0, y: y0, width: x1 - x0, height: y1 - y0, rx: 12, fill: 'none', stroke: 'currentColor', 'stroke-opacity': '0.3', 'stroke-dasharray': '5 3', 'stroke-width': '1.2' }));
       svg.append(svgEl('text', { x: x0 + 10, y: y0 + 16, fill: 'currentColor', 'font-size': 11, 'font-weight': '600', opacity: '0.75' }, sg.title));
     }
 
@@ -224,14 +224,15 @@
         dAttr = `M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`;
       }
       svg.append(svgEl('path', {
-        d: dAttr, fill: 'none', stroke: '#79a9f2', 'stroke-width': e.thick ? '2.6' : '1.6',
+        d: dAttr, fill: 'none', stroke: 'var(--diagram-accent)', 'stroke-width': e.thick ? '2.6' : '1.6',
+        'stroke-linecap': 'round', 'stroke-linejoin': 'round',
         ...(e.dashed ? { 'stroke-dasharray': '5 4' } : {}),
         ...(e.arrow ? { 'marker-end': 'url(#demo-m-arrow)' } : {}),
       }));
       if (e.label) {
         const lx = (x1 + x2) / 2, ly = (y1 + y2) / 2, lw = Math.max(36, e.label.length * 6.8 + 14);
-        svg.append(svgEl('rect', { x: lx - lw / 2, y: ly - 10, width: lw, height: 20, rx: 4, fill: '#1f2329', stroke: '#4a5568', 'stroke-width': 1 }));
-        svg.append(svgEl('text', { x: lx, y: ly + 4, 'text-anchor': 'middle', fill: '#f3f4f6', 'font-size': 11 }, e.label));
+        svg.append(svgEl('rect', { x: lx - lw / 2, y: ly - 10, width: lw, height: 20, rx: 6, fill: 'var(--surface)', stroke: 'var(--line-strong)', 'stroke-width': 1 }));
+        svg.append(svgEl('text', { x: lx, y: ly + 4, 'text-anchor': 'middle', fill: 'var(--ink-strong)', 'font-size': 11 }, e.label));
       }
     }
 
@@ -239,12 +240,12 @@
       const b = boxes.get(n.id), d = dims.get(n.id);
       const g = svgEl('g');
       if (n.shape === 'diamond') {
-        g.append(svgEl('polygon', { points: `${b.cx},${b.y} ${b.x + b.w},${b.cy} ${b.cx},${b.y + b.h} ${b.x},${b.cy}`, fill: 'currentColor', 'fill-opacity': '0.07', stroke: '#79a9f2', 'stroke-width': '1.5' }));
+        g.append(svgEl('polygon', { points: `${b.cx},${b.y} ${b.x + b.w},${b.cy} ${b.cx},${b.y + b.h} ${b.x},${b.cy}`, fill: 'currentColor', 'fill-opacity': '0.06', stroke: 'var(--diagram-accent)', 'stroke-width': '1.5', 'stroke-linejoin': 'round' }));
       } else if (n.shape === 'circle') {
-        g.append(svgEl('circle', { cx: b.cx, cy: b.cy, r: Math.min(b.w, b.h) / 2, fill: 'currentColor', 'fill-opacity': '0.07', stroke: '#79a9f2', 'stroke-width': '1.5' }));
+        g.append(svgEl('circle', { cx: b.cx, cy: b.cy, r: Math.min(b.w, b.h) / 2, fill: 'currentColor', 'fill-opacity': '0.06', stroke: 'var(--diagram-accent)', 'stroke-width': '1.5' }));
       } else {
-        const rx = n.shape === 'stadium' ? b.h / 2 : n.shape === 'round' ? 10 : 5;
-        g.append(svgEl('rect', { x: b.x, y: b.y, width: b.w, height: b.h, rx, fill: 'currentColor', 'fill-opacity': '0.07', stroke: 'currentColor', 'stroke-opacity': '0.4', 'stroke-width': '1.4' }));
+        const rx = n.shape === 'stadium' ? b.h / 2 : n.shape === 'round' ? 12 : 8;
+        g.append(svgEl('rect', { x: b.x, y: b.y, width: b.w, height: b.h, rx, fill: 'currentColor', 'fill-opacity': '0.06', stroke: 'currentColor', 'stroke-opacity': '0.32', 'stroke-width': '1.4' }));
       }
       const txt = svgEl('text', { 'text-anchor': 'middle', fill: 'currentColor', 'font-size': 12 });
       const lh = 16, y0 = b.cy - ((d.lines.length - 1) * lh) / 2 + 4;
@@ -330,20 +331,20 @@
       const xOf = new Map(parts.map((p, idx) => [p.id, pad + colW * idx + colW / 2]));
       const svg = svgEl('svg', { viewBox: `0 0 ${svgW} ${svgH}`, width: svgW, height: svgH, role: 'img', 'aria-label': 'Mermaid sequence diagram' });
       const defs = svgEl('defs'), mk = svgEl('marker', { id: 'demo-s-arrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' });
-      mk.append(svgEl('path', { d: 'M 0 1 L 10 5 L 0 9 z', fill: '#79a9f2' }));
+      mk.append(svgEl('path', { d: 'M 0 1 L 10 5 L 0 9 z', fill: 'var(--diagram-accent)' }));
       defs.append(mk); svg.append(defs);
       const top = pad + boxH, bot = svgH - pad - boxH;
       for (const p of parts) {
         const cx = xOf.get(p.id), bw = Math.min(colW - 16, Math.max(76, p.label.length * 7.2 + 22));
-        svg.append(svgEl('line', { x1: cx, y1: top, x2: cx, y2: bot, stroke: 'currentColor', 'stroke-opacity': '0.3', 'stroke-dasharray': '4 4' }));
+        svg.append(svgEl('line', { x1: cx, y1: top, x2: cx, y2: bot, stroke: 'currentColor', 'stroke-opacity': '0.28', 'stroke-dasharray': '4 4', 'stroke-linecap': 'round' }));
         for (const y of [pad, bot]) {
-          svg.append(svgEl('rect', { x: cx - bw / 2, y, width: bw, height: boxH, rx: 4, fill: 'currentColor', 'fill-opacity': '0.07', stroke: 'currentColor', 'stroke-opacity': '0.35' }));
+          svg.append(svgEl('rect', { x: cx - bw / 2, y, width: bw, height: boxH, rx: 8, fill: 'currentColor', 'fill-opacity': '0.06', stroke: 'currentColor', 'stroke-opacity': '0.32', 'stroke-width': '1.3' }));
           svg.append(svgEl('text', { x: cx, y: y + 20, 'text-anchor': 'middle', fill: 'currentColor', 'font-size': 12 }, p.label));
         }
       }
       msgs.forEach((m, i) => {
         const x1 = xOf.get(m.from), x2 = xOf.get(m.to), y = top + 30 + i * rowH;
-        svg.append(svgEl('line', { x1, y1: y, x2, y2: y, stroke: '#79a9f2', 'stroke-width': '1.6', ...(m.dashed ? { 'stroke-dasharray': '5 3' } : {}), 'marker-end': 'url(#demo-s-arrow)' }));
+        svg.append(svgEl('line', { x1, y1: y, x2, y2: y, stroke: 'var(--diagram-accent)', 'stroke-width': '1.6', 'stroke-linecap': 'round', ...(m.dashed ? { 'stroke-dasharray': '5 3' } : {}), 'marker-end': 'url(#demo-s-arrow)' }));
         svg.append(svgEl('text', { x: (x1 + x2) / 2, y: y - 7, 'text-anchor': 'middle', fill: 'currentColor', 'font-size': 11 }, m.text));
       });
       return { title: 'Mermaid · Sequence diagram', svg };
@@ -397,7 +398,7 @@
         }
         angle += sweep;
         const ly = (title ? 50 : 30) + idx * 24;
-        svg.append(svgEl('rect', { x: 222, y: ly - 10, width: 12, height: 12, rx: 2, fill }));
+        svg.append(svgEl('rect', { x: 222, y: ly - 10, width: 12, height: 12, rx: 3, fill }));
         svg.append(svgEl('text', { x: 242, y: ly, fill: 'currentColor', 'font-size': 12 }, `${s.label} (${(frac * 100).toFixed(1)}%)`));
       });
       return { title: 'Mermaid · Pie chart', svg };
@@ -450,7 +451,7 @@
       const color = PALETTE[sIdx % PALETTE.length];
       if (isLine) {
         const pts = ser.data.map((v, i) => `${(padL + slotW * i + slotW / 2).toFixed(1)},${yOf(v).toFixed(1)}`).join(' ');
-        svg.append(svgEl('polyline', { points: pts, fill: 'none', stroke: color, 'stroke-width': '2.2' }));
+        svg.append(svgEl('polyline', { points: pts, fill: 'none', stroke: color, 'stroke-width': '2.2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
         ser.data.forEach((v, i) => {
           svg.append(svgEl('circle', { cx: padL + slotW * i + slotW / 2, cy: yOf(v), r: 3.5, fill: color }));
         });
@@ -464,7 +465,7 @@
           svg.append(svgEl('rect', {
             x: cx + startOff + sIdx * bw, y: Math.min(vy, zeroY),
             width: Math.max(4, bw - 2), height: Math.max(1, Math.abs(zeroY - vy)),
-            rx: 2, fill: color,
+            rx: 4, fill: color,
           }));
         });
       }
