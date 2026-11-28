@@ -500,6 +500,30 @@ fieldset legend {
 .demo-md ul, .demo-md ol { margin: 0; padding-left: 22px; }
 .demo-md li + li { margin-top: 4px; }
 
+.demo-math {
+  font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", Georgia, serif;
+  font-size: 1.04em;
+  vertical-align: baseline;
+}
+
+.demo-math math,
+.demo-math-block math {
+  font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", Georgia, serif;
+}
+
+.demo-math-block {
+  margin: 10px 0;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--ink-strong);
+  overflow-x: auto;
+  max-width: 100%;
+  font-size: 1.12em;
+  text-align: center;
+}
+
 .demo-quote {
   margin: 4px 0;
   padding: 10px 14px;

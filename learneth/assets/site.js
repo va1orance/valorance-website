@@ -742,7 +742,7 @@ if (form && answer && response && reset) {
   }
 })();
 
-// Live page-generation feel: brisk hero readiness and deliberate scroll reveal.
+// Live page-generation choreography: "Learneth is thinking…" intro, real-time agent typing per section, and deliberate scroll reveal.
 (() => {
   const thinkingEl = document.querySelector('#page-thinking');
   const skipBtn = document.querySelector('#page-skip');
@@ -770,22 +770,73 @@ if (form && answer && response && reset) {
   sections.forEach(sec => sec.classList.add('stream-pending'));
   if (skipBtn) skipBtn.hidden = false;
 
-  function revealElements(elements, stepMs, afterEach) {
+  // Type out an element's visible text nodes in place (preserving inline tags like <br>, <u>, <span>)
+  // while leaving .sr-only and .rotating-word intact.
+  function typeOutElement(el, chunkSize, speedMs) {
     return new Promise(resolve => {
-      if (!elements.length || finishedAll) {
-        elements.forEach(el => el.classList.remove('type-wait'));
-        resolve();
-        return;
+      if (!el || finishedAll) { resolve(); return; }
+      const textEntries = [];
+
+      function collect(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          if (node.nodeValue && node.nodeValue.trim().length > 0) {
+            textEntries.push({ node, full: node.nodeValue });
+            node.nodeValue = '';
+          }
+          return;
+        }
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          if (node.classList.contains('sr-only') || node.classList.contains('rotating-word')) return;
+          [...node.childNodes].forEach(collect);
+        }
       }
-      let remaining = elements.length;
-      elements.forEach((el, i) => {
-        const tid = setTimeout(() => {
-          el.classList.remove('type-wait');
-          if (afterEach) afterEach(el);
-          if (--remaining === 0) resolve();
-        }, i * stepMs);
-        activeTimers.push(() => clearTimeout(tid));
-      });
+
+      collect(el);
+      if (!textEntries.length) { resolve(); return; }
+
+      const caret = document.createElement('span');
+      caret.className = 'stream-caret';
+      caret.setAttribute('aria-hidden', 'true');
+      let done = false;
+      let tid = null;
+
+      function restoreNow() {
+        if (done) return;
+        done = true;
+        clearTimeout(tid);
+        caret.remove();
+        textEntries.forEach(({ node, full }) => { node.nodeValue = full; });
+        resolve();
+      }
+      restorers.push(restoreNow);
+
+      let idx = 0;
+      let pos = 0;
+      function step() {
+        if (done || finishedAll) { restoreNow(); return; }
+        if (document.hidden) { tid = setTimeout(step, 160); return; }
+        const cur = textEntries[idx];
+        if (!cur) {
+          done = true;
+          caret.remove();
+          resolve();
+          return;
+        }
+        if (pos === 0 && cur.node.parentNode) {
+          cur.node.after(caret);
+        }
+        pos = Math.min(cur.full.length, pos + chunkSize);
+        cur.node.nodeValue = cur.full.slice(0, pos);
+        if (pos >= cur.full.length) {
+          idx++;
+          pos = 0;
+          tid = setTimeout(step, 35);
+          return;
+        }
+        tid = setTimeout(step, speedMs);
+      }
+      activeTimers.push(() => clearTimeout(tid));
+      step();
     });
   }
 
@@ -794,17 +845,30 @@ if (form && answer && response && reset) {
     const h1 = sec.querySelector('h1');
     const lead = sec.querySelector('.hero-lead');
     const extras = [
-      eyebrow,
-      h1,
-      lead,
       sec.querySelector('.hero-actions'),
       sec.querySelector('.hero-trust'),
-      sec.querySelector('.hero-status'),
     ].filter(Boolean);
 
     extras.forEach(el => { el.classList.add('type-slot', 'type-wait'); });
+    if (lead) lead.classList.add('type-slot', 'type-wait');
+    if (h1) h1.classList.add('type-slot', 'type-wait');
     sec.classList.remove('stream-pending');
-    await revealElements(extras, 70);
+
+    if (eyebrow && !finishedAll) {
+      await typeOutElement(eyebrow, 4, 14);
+    }
+    if (h1 && !finishedAll) {
+      h1.classList.remove('type-wait');
+      await typeOutElement(h1, 2, 20);
+    }
+    if (lead && !finishedAll) {
+      lead.classList.remove('type-wait');
+      await typeOutElement(lead, 4, 14);
+    }
+    extras.forEach((el, i) => {
+      const tid = setTimeout(() => el.classList.remove('type-wait'), i * 90);
+      activeTimers.push(() => clearTimeout(tid));
+    });
   }
 
   async function typeContentSection(sec) {
@@ -814,14 +878,25 @@ if (form && answer && response && reset) {
       el => !el.classList.contains('section-think') && !el.classList.contains('section-intro') && !el.classList.contains('section-head')
     );
 
-    const sequence = [h2, introP, ...bodyBlocks].filter(Boolean);
-    sequence.forEach(el => el.classList.add('type-slot', 'type-wait'));
+    bodyBlocks.forEach(el => el.classList.add('type-slot', 'type-wait'));
+    if (introP) introP.classList.add('type-slot', 'type-wait');
     sec.classList.remove('stream-pending');
 
-    await revealElements(sequence, 95, el => {
-      if (sec.id === 'preview' && el.classList.contains('workspace')) {
-        signalPreviewRevealed(false);
-      }
+    if (h2 && !finishedAll) {
+      await typeOutElement(h2, 3, 18);
+    }
+    if (introP && !finishedAll) {
+      introP.classList.remove('type-wait');
+      await typeOutElement(introP, 5, 13);
+    }
+    bodyBlocks.forEach((el, i) => {
+      const tid = setTimeout(() => {
+        el.classList.remove('type-wait');
+        if (sec.id === 'preview' && el.classList.contains('workspace')) {
+          signalPreviewRevealed(false);
+        }
+      }, i * 140);
+      activeTimers.push(() => clearTimeout(tid));
     });
   }
 
@@ -859,11 +934,11 @@ if (form && answer && response && reset) {
     bar.classList.add('is-thinking');
     const draftStart = performance.now();
     barSpin.textContent = DOTS[0];
-    barText.textContent = 'Preparing section… 0.0s';
+    barText.textContent = 'Learneth is drafting this section… 0.0s';
     const iv = setInterval(() => {
       const elapsedMs = performance.now() - draftStart;
       barSpin.textContent = DOTS[Math.floor(elapsedMs / 180) % DOTS.length];
-      barText.textContent = `Preparing section… ${(elapsedMs / 1000).toFixed(1)}s`;
+      barText.textContent = `Learneth is drafting this section… ${(elapsedMs / 1000).toFixed(1)}s`;
     }, 80);
     let thinkingDone = false;
     function restoreThinking() {
@@ -881,7 +956,7 @@ if (form && answer && response && reset) {
       typeContentSection(sec).then(() => {
         if (pending.size === 0 && skipBtn) skipBtn.hidden = true;
       });
-    }, 450);
+    }, 520);
     activeTimers.push(() => { clearInterval(iv); clearTimeout(tid); });
   }
 
@@ -908,19 +983,21 @@ if (form && answer && response && reset) {
     if (motion.matches || pending.size === 0 || finishedAll) { finishAll(); return; }
     const tStart = performance.now();
     if (spinEl) spinEl.textContent = DOTS[0];
-    if (labelEl) labelEl.textContent = 'Preparing workspace…';
+    if (labelEl) labelEl.textContent = 'Learneth is thinking… 0.0s';
     const introIv = setInterval(() => {
       const elapsedMs = performance.now() - tStart;
       if (spinEl) spinEl.textContent = DOTS[Math.floor(elapsedMs / 160) % DOTS.length];
+      if (labelEl) labelEl.textContent = `Learneth is thinking… ${(elapsedMs / 1000).toFixed(1)}s`;
     }, 80);
     const introTid = setTimeout(() => {
       clearInterval(introIv);
+      const elapsed = ((performance.now() - tStart) / 1000).toFixed(1);
       thinkingEl.classList.add('is-done');
       if (spinEl) spinEl.textContent = '✓';
-      if (labelEl) labelEl.textContent = 'Interactive preview · scroll to explore';
+      if (labelEl) labelEl.textContent = `Thought for ${elapsed}s · typing live`;
       const hero = sections.find(s => s.dataset.streamSection === 'hero');
       if (hero) revealSection(hero, false);
-    }, 280);
+    }, 450);
     activeTimers.push(() => { clearInterval(introIv); clearTimeout(introTid); });
 
     if ('IntersectionObserver' in window) {
